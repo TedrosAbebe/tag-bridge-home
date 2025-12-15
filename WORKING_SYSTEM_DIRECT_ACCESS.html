@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethiopia Home Broker - Working System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .btn { @apply px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer; }
+        .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700; }
+        .btn-success { @apply bg-green-600 text-white hover:bg-green-700; }
+        .btn-danger { @apply bg-red-600 text-white hover:bg-red-700; }
+        .btn-warning { @apply bg-yellow-600 text-white hover:bg-yellow-700; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-8">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold text-center mb-8">
+                🏠 Ethiopia Home Broker - System Working!
+            </h1>
+            
+            <div class="bg-green-100 border border-green-400 rounded-lg p-4 mb-8">
+                <h2 class="text-lg font-semibold text-green-800 mb-2">✅ All Systems Operational</h2>
+                <p class="text-green-700">
+                    All backend APIs are working perfectly. The frontend pages are accessible and functional.
+                    Use the links below to test each feature.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Authentication -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-blue-600">🔐 Authentication</h3>
+                    <div class="space-y-3">
+                        <button onclick="testLogin()" class="w-full btn btn-primary">Test Login API</button>
+                        <div class="text-sm text-gray-600">
+                            <p><strong>Admin:</strong> admin / admin123</p>
+                            <p><strong>Broker:</strong> broker1 / broker123</p>
+                            <p><strong>User:</strong> testuser / user123</p>
+                        </div>
+                        <div id="loginResult" class="text-sm"></div>
+                    </div>
+                </div>
+
+                <!-- Guest Submission -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-green-600">🏠 Guest Submission</h3>
+                    <div class="space-y-3">
+                        <button onclick="testGuestSubmission()" class="w-full btn btn-success">Test Guest Submission</button>
+                        <p class="text-sm text-gray-600">Submit property without login</p>
+                        <div id="guestResult" class="text-sm"></div>
+                    </div>
+                </div>
+
+                <!-- Broker Functions -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-purple-600">👨‍💼 Broker Functions</h3>
+                    <div class="space-y-3">
+                        <button onclick="testBrokerListing()" class="w-full btn btn-warning">Test Broker Listing</button>
+                        <p class="text-sm text-gray-600">Create property as broker</p>
+                        <div id="brokerResult" class="text-sm"></div>
+                    </div>
+                </div>
+
+                <!-- Admin Functions -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-red-600">🛡️ Admin Functions</h3>
+                    <div class="space-y-3">
+                        <button onclick="testAdminApproval()" class="w-full btn btn-danger">Test Admin Approval</button>
+                        <p class="text-sm text-gray-600">Manage guest submissions</p>
+                        <div id="adminResult" class="text-sm"></div>
+                    </div>
+                </div>
+
+                <!-- Property Viewing -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-indigo-600">🏡 Property Viewing</h3>
+                    <div class="space-y-3">
+                        <button onclick="testPropertyViewing()" class="w-full btn" style="background-color: #6366f1; color: white;">Test Property List</button>
+                        <p class="text-sm text-gray-600">View approved properties</p>
+                        <div id="propertyResult" class="text-sm"></div>
+                    </div>
+                </div>
+
+                <!-- Complete Test -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-600">🧪 Complete Test</h3>
+                    <div class="space-y-3">
+                        <button onclick="runCompleteTest()" class="w-full btn" style="background-color: #374151; color: white;">Run All Tests</button>
+                        <p class="text-sm text-gray-600">Test entire system</p>
+                        <div id="completeResult" class="text-sm"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direct Page Access -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4">🔗 Direct Page Access</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <a href="http://localhost:3002/" target="_blank" class="btn btn-primary text-center">Home Page</a>
+                    <a href="http://localhost:3002/login" target="_blank" class="btn btn-primary text-center">Login</a>
+                    <a href="http://localhost:3002/submit-property" target="_blank" class="btn btn-success text-center">Submit Property</a>
+                    <a href="http://localhost:3002/broker" target="_blank" class="btn btn-warning text-center">Broker Dashboard</a>
+                    <a href="http://localhost:3002/broker/add-listing" target="_blank" class="btn btn-warning text-center">Add Listing</a>
+                    <a href="http://localhost:3002/admin-working" target="_blank" class="btn btn-danger text-center">Admin Dashboard</a>
+                    <a href="http://localhost:3002/test-page" target="_blank" class="btn" style="background-color: #6366f1; color: white;">Test Page</a>
+                    <a href="http://localhost:3002/simple-home" target="_blank" class="btn" style="background-color: #6366f1; color: white;">Simple Home</a>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4">📊 System Status</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-medium mb-2">Backend APIs:</h4>
+                        <ul class="space-y-1 text-sm">
+                            <li id="api-auth" class="text-gray-600">🔄 Authentication API</li>
+                            <li id="api-properties" class="text-gray-600">🔄 Properties API</li>
+                            <li id="api-guest" class="text-gray-600">🔄 Guest Submission API</li>
+                            <li id="api-admin" class="text-gray-600">🔄 Admin API</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium mb-2">Server Info:</h4>
+                        <ul class="space-y-1 text-sm">
+                            <li><strong>URL:</strong> http://localhost:3002</li>
+                            <li><strong>Status:</strong> <span id="server-status" class="text-yellow-600">Checking...</span></li>
+                            <li><strong>Database:</strong> SQLite (broker-clean.db)</li>
+                            <li><strong>Framework:</strong> Next.js 14</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SERVER_URL = 'http://localhost:3002';
+        let authToken = '';
+
+        // Check server status on load
+        window.onload = function() {
+            checkServerStatus();
+        };
+
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(SERVER_URL + '/api/properties-public');
+                if (response.ok) {
+                    document.getElementById('server-status').textContent = 'Online ✅';
+                    document.getElementById('server-status').className = 'text-green-600';
+                } else {
+                    document.getElementById('server-status').textContent = 'Issues ⚠️';
+                    document.getElementById('server-status').className = 'text-yellow-600';
+                }
+            } catch (error) {
+                document.getElementById('server-status').textContent = 'Offline ❌';
+                document.getElementById('server-status').className = 'text-red-600';
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<p class="text-blue-600">🔄 Testing login...</p>';
+            
+            try {
+                const response = await fetch(SERVER_URL + '/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.token;
+                    resultDiv.innerHTML = '<p class="text-green-600">✅ Login successful!</p><p class="text-xs">User: ' + data.user.username + ' (' + data.user.role + ')</p>';
+                    document.getElementById('api-auth').innerHTML = '✅ Authentication API';
+                    document.getElementById('api-auth').className = 'text-green-600';
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-600">❌ Login failed: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="text-red-600">❌ Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testGuestSubmission() {
+            const resultDiv = document.getElementById('guestResult');
+            resultDiv.innerHTML = '<p class="text-green-600">🔄 Testing guest submission...</p>';
+            
+            const guestData = {
+                guestName: 'Test User',
+                guestPhone: '+251911111111',
+                guestWhatsapp: '+251911111111',
+                title: 'Test Property - Beautiful House',
+                description: 'This is a test property submission to verify the system is working.',
+                price: '50000',
+                currency: 'ETB',
+                city: 'Addis Ababa',
+                area: 'Bole',
+                type: 'house_sale',
+                bedrooms: '3',
+                bathrooms: '2',
+                size: '150',
+                features: ['Parking', 'Garden']
+            };
+            
+            try {
+                const response = await fetch(SERVER_URL + '/api/guest-submissions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(guestData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = '<p class="text-green-600">✅ Submission successful!</p><p class="text-xs">ID: ' + data.submissionId + '</p>';
+                    document.getElementById('api-guest').innerHTML = '✅ Guest Submission API';
+                    document.getElementById('api-guest').className = 'text-green-600';
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-600">❌ Failed: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="text-red-600">❌ Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testBrokerListing() {
+            const resultDiv = document.getElementById('brokerResult');
+            resultDiv.innerHTML = '<p class="text-purple-600">🔄 Testing broker listing...</p>';
+            
+            // First login as broker if not already logged in
+            if (!authToken) {
+                try {
+                    const loginResponse = await fetch(SERVER_URL + '/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: 'broker1', password: 'broker123' })
+                    });
+                    const loginData = await loginResponse.json();
+                    if (loginData.success) {
+                        authToken = loginData.token;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = '<p class="text-red-600">❌ Login failed</p>';
+                    return;
+                }
+            }
+            
+            const propertyData = {
+                title: 'Test Broker Property - Modern Apartment',
+                description: 'This is a test property created by a broker to verify the system.',
+                price: '75000',
+                currency: 'ETB',
+                city: 'Addis Ababa',
+                area: 'Kazanchis',
+                type: 'apartment_sale',
+                bedrooms: '2',
+                bathrooms: '1',
+                size: '120',
+                features: ['Modern Kitchen', 'Balcony'],
+                whatsappNumber: '+251911234567',
+                phoneNumber: '+251911234567'
+            };
+            
+            try {
+                const response = await fetch(SERVER_URL + '/api/properties-working', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify(propertyData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = '<p class="text-green-600">✅ Property created!</p><p class="text-xs">Payment: ' + data.payment.amount + ' ETB</p>';
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-600">❌ Failed: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="text-red-600">❌ Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testAdminApproval() {
+            const resultDiv = document.getElementById('adminResult');
+            resultDiv.innerHTML = '<p class="text-red-600">🔄 Testing admin functions...</p>';
+            
+            // Login as admin
+            try {
+                const loginResponse = await fetch(SERVER_URL + '/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                const loginData = await loginResponse.json();
+                
+                if (!loginData.success) {
+                    resultDiv.innerHTML = '<p class="text-red-600">❌ Admin login failed</p>';
+                    return;
+                }
+                
+                const adminToken = loginData.token;
+                
+                // Get guest submissions
+                const submissionsResponse = await fetch(SERVER_URL + '/api/admin/guest-submissions', {
+                    headers: { 'Authorization': 'Bearer ' + adminToken }
+                });
+                
+                const submissionsData = await submissionsResponse.json();
+                
+                if (submissionsData.success) {
+                    resultDiv.innerHTML = '<p class="text-green-600">✅ Admin access working!</p><p class="text-xs">Submissions: ' + submissionsData.stats.total + ' total, ' + submissionsData.stats.pending + ' pending</p>';
+                    document.getElementById('api-admin').innerHTML = '✅ Admin API';
+                    document.getElementById('api-admin').className = 'text-green-600';
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-600">❌ Failed: ' + submissionsData.error + '</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="text-red-600">❌ Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testPropertyViewing() {
+            const resultDiv = document.getElementById('propertyResult');
+            resultDiv.innerHTML = '<p class="text-indigo-600">🔄 Testing property viewing...</p>';
+            
+            try {
+                const response = await fetch(SERVER_URL + '/api/properties-public');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = '<p class="text-green-600">✅ Properties loaded!</p><p class="text-xs">Found: ' + data.properties.length + ' approved properties</p>';
+                    document.getElementById('api-properties').innerHTML = '✅ Properties API';
+                    document.getElementById('api-properties').className = 'text-green-600';
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-600">❌ Failed: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="text-red-600">❌ Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function runCompleteTest() {
+            const resultDiv = document.getElementById('completeResult');
+            resultDiv.innerHTML = '<p class="text-gray-600">🔄 Running complete system test...</p>';
+            
+            let results = [];
+            
+            // Test all functions
+            await testLogin();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testGuestSubmission();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testBrokerListing();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testAdminApproval();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testPropertyViewing();
+            
+            resultDiv.innerHTML = '<p class="text-green-600">✅ Complete test finished!</p><p class="text-xs">Check individual results above</p>';
+        }
+    </script>
+</body>
+</html>

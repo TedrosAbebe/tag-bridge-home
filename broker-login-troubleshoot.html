@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broker Login Troubleshoot</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 3px; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Broker Login Troubleshoot</h1>
+    
+    <div class="section info">
+        <h3>📋 Available Broker Accounts</h3>
+        <p>These are the broker accounts that should work for login:</p>
+        <table>
+            <tr><th>Username</th><th>Status</th><th>Full Name</th><th>Test Login</th></tr>
+            <tr>
+                <td><strong>testbroker</strong></td>
+                <td>✅ Approved</td>
+                <td>Test Broker User</td>
+                <td><button onclick="testLogin('testbroker', 'password123')">Test Login</button></td>
+            </tr>
+            <tr>
+                <td><strong>tedn</strong></td>
+                <td>✅ Approved</td>
+                <td>Tedros Abebe</td>
+                <td><button onclick="testLogin('tedn', 'broker123')">Test Login</button></td>
+            </tr>
+            <tr>
+                <td><strong>broker1</strong></td>
+                <td>❓ Unknown</td>
+                <td>Test Account</td>
+                <td><button onclick="testLogin('broker1', 'password')">Test Login</button></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>🧪 Custom Login Test</h3>
+        <p>Test login with your own credentials:</p>
+        
+        <div>
+            <label>Username: </label>
+            <input type="text" id="customUsername" placeholder="Enter username" style="width: 200px;">
+        </div>
+        
+        <div>
+            <label>Password: </label>
+            <input type="password" id="customPassword" placeholder="Enter password" style="width: 200px;">
+        </div>
+        
+        <button onclick="testCustomLogin()">Test Custom Login</button>
+        <div id="custom-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>🔍 Login Result</h3>
+        <div id="login-result">
+            <p>Click a test button above to see login results here.</p>
+        </div>
+    </div>
+
+    <div class="section warning">
+        <h3>💡 Common Issues & Solutions</h3>
+        <ol>
+            <li><strong>Wrong Username:</strong> Make sure you're using the exact username you registered with</li>
+            <li><strong>Wrong Password:</strong> Use the password you set during registration</li>
+            <li><strong>Pending Approval:</strong> Check if your broker application needs admin approval</li>
+            <li><strong>Account Not Created:</strong> Registration might have failed - check admin dashboard</li>
+        </ol>
+        
+        <h4>🔧 Quick Fixes:</h4>
+        <ul>
+            <li><strong>Use testbroker/password123</strong> - This account is guaranteed to work</li>
+            <li><strong>Check admin dashboard</strong> - Look for your broker application</li>
+            <li><strong>Register again</strong> - If account is missing, register with simple credentials</li>
+        </ul>
+    </div>
+
+    <script>
+        async function testLogin(username, password) {
+            console.log('🔐 Testing login:', { username, password });
+            
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = '<p>🔄 Testing login...</p>';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+                console.log('Login response:', data);
+
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Login Successful!</h4>
+                            <p><strong>Username:</strong> ${data.user.username}</p>
+                            <p><strong>Role:</strong> ${data.user.role}</p>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                            <p><strong>Broker Status:</strong> ${data.user.brokerStatus || 'N/A'}</p>
+                            
+                            <h5>🎉 You can now login with these credentials:</h5>
+                            <ul>
+                                <li>Username: <code>${username}</code></li>
+                                <li>Password: <code>${password}</code></li>
+                            </ul>
+                            
+                            <p><strong>Next Steps:</strong></p>
+                            <ol>
+                                <li>Go to the login page</li>
+                                <li>Enter the username and password above</li>
+                                <li>Click Sign In</li>
+                                <li>You should be redirected to /broker dashboard</li>
+                            </ol>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Login Failed</h4>
+                            <p><strong>Error:</strong> ${data.message}</p>
+                            <p><strong>Tried:</strong> ${username} / ${password}</p>
+                            
+                            <h5>🔧 Possible Solutions:</h5>
+                            <ul>
+                                <li>Try a different username/password combination</li>
+                                <li>Check if the account exists in admin dashboard</li>
+                                <li>Use the working account: testbroker/password123</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>🌐 Network Error</h4>
+                        <p>${error.message}</p>
+                        <p>Make sure the development server is running.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testCustomLogin() {
+            const username = document.getElementById('customUsername').value;
+            const password = document.getElementById('customPassword').value;
+            
+            if (!username || !password) {
+                alert('Please enter both username and password');
+                return;
+            }
+            
+            await testLogin(username, password);
+        }
+    </script>
+</body>
+</html>

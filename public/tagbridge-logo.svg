@@ -1,0 +1,24 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tag shape background -->
+  <path d="M40 60 L160 60 Q180 60 180 80 L180 140 Q180 160 160 160 L80 160 Q60 160 40 140 Z" fill="#20B2AA"/>
+  
+  <!-- Tag hole -->
+  <circle cx="150" cy="80" r="8" fill="white"/>
+  
+  <!-- Tag string -->
+  <line x1="30" y1="70" x2="50" y2="90" stroke="black" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Bridge -->
+  <path d="M70 120 Q110 100 150 120" stroke="#FF6B35" stroke-width="8" fill="none"/>
+  <rect x="75" y="115" width="4" height="15" fill="#FF6B35"/>
+  <rect x="85" y="110" width="4" height="20" fill="#FF6B35"/>
+  <rect x="95" y="105" width="4" height="25" fill="#FF6B35"/>
+  <rect x="105" y="105" width="4" height="25" fill="#FF6B35"/>
+  <rect x="115" y="110" width="4" height="20" fill="#FF6B35"/>
+  <rect x="125" y="115" width="4" height="15" fill="#FF6B35"/>
+  <rect x="135" y="115" width="4" height="15" fill="#FF6B35"/>
+  <rect x="145" y="115" width="4" height="15" fill="#FF6B35"/>
+  
+  <!-- Bridge base -->
+  <ellipse cx="110" cy="135" rx="45" ry="8" fill="#20B2AA"/>
+</svg>

@@ -1,0 +1,1695 @@
+// lib/database.ts
+// Consolidated, TypeScript-safe database initializer with a DATABASE_URL guard.
+// - When `process.env.DATABASE_URL` is present we skip requiring/native SQLite.
+// - When absent we initialize a local better-sqlite3 database and export
+//   minimal prepared statements used by the application.
+
+/* eslint-disable @typescript-eslint/no-var-requires */
+const DATABASE_URL = process.env.DATABASE_URL
+
+export const isRemoteDb = Boolean(DATABASE_URL)
+
+export let db: any = null
+export let userOperations: any = {}
+export let propertyOperations: any = {}
+export let paymentOperations: any = {}
+export let initializeDatabase: (() => void) | null = null
+
+if (DATABASE_URL) {
+  // Remote DB mode: don't import native modules. Provide helpful stubs that
+  // throw if code tries to use SQLite operations without a production adapter.
+  // eslint-disable-next-line no-console
+  console.warn('[lib/database] DATABASE_URL detected — skipping local SQLite initialization.')
+
+  const makeStub = (name: string) => new Proxy({}, {
+    get() {
+      return () => {
+        throw new Error(
+          `[lib/database] Attempted to use ${name} while running with DATABASE_URL=${DATABASE_URL}.` +
+          ' The local SQLite adapter is disabled. Implement a remote DB adapter or unset DATABASE_URL for local development.'
+        )
+      }
+    }
+  })
+
+  userOperations = makeStub('userOperations')
+  propertyOperations = makeStub('propertyOperations')
+  paymentOperations = makeStub('paymentOperations')
+  initializeDatabase = () => {
+    throw new Error('[lib/database] initializeDatabase is not available when DATABASE_URL is set.')
+  }
+
+} else {
+  // Local development: require better-sqlite3 dynamically and initialize DB.
+  const Database = require('better-sqlite3')
+  const path = require('path')
+  const fs = require('fs')
+  const bcrypt = require('bcryptjs')
+
+  const dbDir = path.join(process.cwd(), 'data')
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true })
+  const dbFile = path.join(dbDir, 'broker.db')
+
+  db = new Database(dbFile)
+  db.pragma('foreign_keys = ON')
+
+  // Minimal idempotent schema for development.
+  db.exec(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT CHECK(role IN ('admin','broker','user','advertiser')) DEFAULT 'user', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`)
+  db.exec(`CREATE TABLE IF NOT EXISTS system_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`)
+
+  userOperations = {
+    create: db.prepare('INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)'),
+    findByUsername: db.prepare('SELECT * FROM users WHERE username = ?'),
+    findById: db.prepare('SELECT * FROM users WHERE id = ?')
+  }
+
+  propertyOperations = {
+    // Minimal placeholders; expand as needed by the app later.
+    create: db.prepare('INSERT INTO system_settings (key, value) VALUES (?, ?)'),
+    getAll: db.prepare('SELECT * FROM system_settings')
+  }
+
+  paymentOperations = {
+    create: db.prepare('INSERT INTO system_settings (key, value) VALUES (?, ?)')
+  }
+
+  initializeDatabase = () => {
+    const existingAdmin = db.prepare('SELECT id FROM users WHERE username = ? LIMIT 1').get('admin')
+    if (!existingAdmin) {
+      const adminPassword = 'admin123'
+      const hashedPassword = bcrypt.hashSync(adminPassword, 12)
+      const adminId = 'admin-' + Date.now().toString()
+      db.prepare('INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)').run(adminId, 'admin', hashedPassword, 'admin')
+      console.log('[lib/database] Default admin created: username=admin password=admin123')
+    }
+  }
+
+  try { initializeDatabase() } catch (err) { console.error('[lib/database] Error initializing DB', err) }
+  // eslint-disable-next-line no-console
+  console.log('[lib/database] Local SQLite initialized at', dbFile)
+}
+
+export default db
+// Overwrite the file with a clean, minimal and consistent implementation.
+/* eslint-disable @typescript-eslint/no-var-requires */
+const DATABASE_URL2 = process.env.DATABASE_URL
+
+export const isRemoteDb2 = Boolean(DATABASE_URL2)
+
+export let db2: any = null
+export let userOperations2: any = {}
+export let propertyOperations2: any = {}
+export let paymentOperations2: any = {}
+export let initializeDatabase2: (() => void) | null = null
+
+if (DATABASE_URL2) {
+  console.warn('[lib/database] DATABASE_URL detected — skipping local SQLite initialization.')
+  const makeStub = (name: string) => new Proxy({}, { get() { return () => { throw new Error(`[lib/database] ${name} is not available when DATABASE_URL is set.`) } } })
+  userOperations2 = makeStub('userOperations')
+  propertyOperations2 = makeStub('propertyOperations')
+  paymentOperations2 = makeStub('paymentOperations')
+  initializeDatabase2 = () => { throw new Error('initializeDatabase is not available when DATABASE_URL is set') }
+} else {
+  const Database = require('better-sqlite3')
+  const path = require('path')
+  const fs = require('fs')
+  const bcrypt = require('bcryptjs')
+
+  const dbDir = path.join(process.cwd(), 'data')
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true })
+  const dbFile = path.join(dbDir, 'broker.db')
+
+  db2 = new Database(dbFile)
+  db2.pragma('foreign_keys = ON')
+
+  // Minimal idempotent schema
+  db2.exec(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT CHECK(role IN ('admin','broker','user','advertiser')) DEFAULT 'user', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`)
+  db2.exec(`CREATE TABLE IF NOT EXISTS system_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`)
+
+  userOperations2 = {
+    create: db2.prepare('INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)'),
+    findByUsername: db2.prepare('SELECT * FROM users WHERE username = ?'),
+    findById: db2.prepare('SELECT * FROM users WHERE id = ?')
+  }
+
+  initializeDatabase2 = () => {
+    const existingAdmin = db2.prepare('SELECT id FROM users WHERE username = ? LIMIT 1').get('admin')
+    if (!existingAdmin) {
+      const adminPassword = 'admin123'
+      const hashedPassword = bcrypt.hashSync(adminPassword, 12)
+      const adminId = 'admin-' + Date.now().toString()
+      db2.prepare('INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)').run(adminId, 'admin', hashedPassword, 'admin')
+      console.log('[lib/database] Default admin created: username=admin password=admin123')
+    }
+  }
+
+  try { initializeDatabase2() } catch (e) { console.error('[lib/database] init error', e) }
+}
+
+export default db2
+
+// Safe database initializer with DATABASE_URL guard.
+// - If `process.env.DATABASE_URL` is set, we DO NOT require or initialize SQLite.
+// - If unset, we initialize a local SQLite database at `data/broker.db`.
+// This file intentionally avoids importing `better-sqlite3` when a remote
+// DATABASE_URL is present to prevent native module load errors in serverless
+// build environments.
+
+const DATABASE_URL = process.env.DATABASE_URL;
+
+export let db: any = null;
+export let userOperations: any = {};
+export let propertyOperations: any = {};
+export let paymentOperations: any = {};
+export const isRemoteDb = Boolean(DATABASE_URL);
+
+if (DATABASE_URL) {
+  // Running with remote DB URL: skip SQLite initialization.
+  // Provide helpful, throwing stubs so runtime code fails fast with guidance
+  // rather than attempting to import native SQLite modules during build.
+  // Consumers should implement a production DB adapter that matches the
+  // operations used across the codebase when `DATABASE_URL` is provided.
+  // NOTE: do not `require('better-sqlite3')` in this branch.
+  // Emit a clear runtime message.
+  // In production, absence of a proper remote DB adapter should be addressed
+  // by the deploy/ops workflow.
+  // eslint-disable-next-line no-console
+  console.warn('[lib/database] DATABASE_URL detected — skipping local SQLite initialization.');
+
+  const makeThrowingProxy = (name: string) => new Proxy({}, {
+    get() {
+      return () => {
+        throw new Error(
+          `[lib/database] ${name} was used while DATABASE_URL=${DATABASE_URL}.` +
+          ' The repository is running in "remote DB" mode and the local SQLite adapter is disabled.' +
+          ' Implement a remote DB adapter in this file or unset DATABASE_URL for local development.'
+        );
+      };
+    }
+  });
+
+  userOperations = makeThrowingProxy('userOperations');
+  propertyOperations = makeThrowingProxy('propertyOperations');
+  paymentOperations = makeThrowingProxy('paymentOperations');
+
+} else {
+  // Local development: initialize SQLite.
+  // Require dynamically so bundlers / serverless builders won't try to include
+  // the native module when DATABASE_URL is set in production.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+  const Database = require('better-sqlite3');
+  // Node built-ins
+  const path = require('path');
+  const fs = require('fs');
+
+  const dbDir = path.join(process.cwd(), 'data');
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+  const dbFile = path.join(dbDir, 'broker.db');
+
+  // Open the SQLite DB file (creates it if missing).
+  db = new Database(dbFile);
+
+  // Initialize minimal schema used across the project. Keep schema small
+  // and idempotent so repeated imports are safe.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE,
+      password TEXT,
+      role TEXT,
+      username TEXT
+    );
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS properties (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT,
+      description TEXT,
+      price REAL,
+      status TEXT
+    );
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      property_id INTEGER,
+      user_id INTEGER,
+      amount REAL,
+      status TEXT
+    );
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS property_images (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      property_id INTEGER,
+      image_url TEXT
+    );
+  `);
+
+  // Export a small set of prepared statements used by scripts and routes.
+  userOperations = {
+    create: db.prepare('INSERT INTO users (email, password, role, username) VALUES (?, ?, ?, ?)'),
+    findByEmail: db.prepare('SELECT * FROM users WHERE email = ?'),
+    findById: db.prepare('SELECT * FROM users WHERE id = ?')
+  };
+
+  propertyOperations = {
+    create: db.prepare('INSERT INTO properties (title, description, price, status) VALUES (?, ?, ?, ?)'),
+    getById: db.prepare('SELECT * FROM properties WHERE id = ?'),
+    listAll: db.prepare('SELECT * FROM properties')
+  };
+
+  paymentOperations = {
+    create: db.prepare('INSERT INTO payments (property_id, user_id, amount, status) VALUES (?, ?, ?, ?)'),
+    updateStatus: db.prepare('UPDATE payments SET status = ? WHERE id = ?'),
+    findById: db.prepare('SELECT * FROM payments WHERE id = ?')
+  };
+
+  // eslint-disable-next-line no-console
+  console.log('[lib/database] Initialized local SQLite database at', dbFile);
+}
+
+export default db;
+import Database from 'better-sqlite3'
+import { join } from 'path'
+import bcrypt from 'bcryptjs'
+
+const dbPath = join(process.cwd(), 'data', 'broker.db')
+const db = new Database(dbPath)
+
+// Enable foreign keys
+db.pragma('foreign_keys = ON')
+
+// Initialize database tables
+export function initializeDatabase() {
+  // Single users table for admin, broker, and regular users
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT CHECK(role IN ('admin', 'broker', 'user')) DEFAULT 'user',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Properties table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS properties (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT,
+      price REAL NOT NULL,
+      currency TEXT DEFAULT 'ETB',
+      city TEXT NOT NULL,
+      area TEXT NOT NULL,
+      latitude REAL,
+      longitude REAL,
+      type TEXT CHECK(type IN ('house_sale', 'house_rent', 'apartment', 'land')) NOT NULL,
+      bedrooms INTEGER,
+      bathrooms INTEGER,
+      size REAL NOT NULL,
+      features TEXT, -- JSON string
+      status TEXT CHECK(status IN ('pending_payment', 'pending', 'approved', 'sold', 'rejected')) DEFAULT 'pending_payment',
+      owner_id TEXT NOT NULL,
+      broker_id TEXT,
+      whatsapp_number TEXT NOT NULL,
+      phone_number TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (owner_id) REFERENCES users (id),
+      FOREIGN KEY (broker_id) REFERENCES users (id)
+    )
+  `)
+
+  // Property images table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS property_images (
+      id TEXT PRIMARY KEY,
+      property_id TEXT NOT NULL,
+      image_url TEXT NOT NULL,
+      is_primary BOOLEAN DEFAULT FALSE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE CASCADE
+    )
+  `)
+
+  // Favorites table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS favorites (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      property_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, property_id),
+      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+      FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE CASCADE
+    )
+  `)
+
+  // Payments table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY,
+      property_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      amount REAL NOT NULL,
+      currency TEXT DEFAULT 'ETB',
+      payment_type TEXT CHECK(payment_type IN ('rent_listing', 'sale_listing')) NOT NULL,
+      status TEXT CHECK(status IN ('pending', 'confirmed', 'rejected')) DEFAULT 'pending',
+      whatsapp_confirmation_message TEXT,
+
+      admin_notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      confirmed_at DATETIME,
+      FOREIGN KEY (property_id) REFERENCES properties (id),
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+  `)
+
+  // WhatsApp confirmations table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS whatsapp_confirmations (
+      id TEXT PRIMARY KEY,
+      payment_id TEXT NOT NULL,
+      sender_number TEXT NOT NULL,
+      message_content TEXT NOT NULL,
+      received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      processed BOOLEAN DEFAULT FALSE,
+      FOREIGN KEY (payment_id) REFERENCES payments (id)
+    )
+  `)
+
+  // Admin logs table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS admin_logs (
+      id TEXT PRIMARY KEY,
+      admin_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      target_type TEXT CHECK(target_type IN ('user', 'property', 'payment', 'system')) NOT NULL,
+      target_id TEXT,
+      details TEXT,
+      ip_address TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (admin_id) REFERENCES users (id)
+    )
+  `)
+
+  // System settings table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Insert default system settings
+  const insertSetting = db.prepare(`
+    INSERT OR IGNORE INTO system_settings (key, value) VALUES (?, ?)
+  `)
+  
+  insertSetting.run('rent_listing_fee', '25')
+  insertSetting.run('sale_listing_fee', '50')
+  insertSetting.run('whatsapp_contact_placeholder', 'WHATSAPP_CONTACT_PLACEHOLDER')
+
+
+  // Create default admin user
+  createDefaultAdmin()
+}
+
+function createDefaultAdmin() {
+  // Check if default admin exists in users table
+  const existingAdmin = db.prepare('SELECT id FROM users WHERE username = ? LIMIT 1').get('admin')
+  
+  if (!existingAdmin) {
+    // Create new admin account
+    console.log('🔐 Setting up default admin account...')
+    
+    const adminPassword = 'admin123'
+    const hashedPassword = bcrypt.hashSync(adminPassword, 12)
+    const adminId = 'admin-' + Date.now()
+    
+    // Create in users table with username-based authentication
+    db.prepare(`
+      INSERT INTO users (id, username, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `).run(
+      adminId,
+      'admin',
+      hashedPassword,
+      'admin'
+    )
+    
+    console.log('✅ Default admin account created:')
+    console.log('   Username: admin')
+    console.log('   Password: admin123')
+    console.log('   Role: admin')
+  } else {
+    console.log('✅ Default admin account already exists')
+  }
+}
+
+// Removed admin operations and OTP operations - using single users table now
+
+// User operations (for both admin and regular users)
+export const userOperations = {
+  create: db.prepare(`
+    INSERT INTO users (id, username, password_hash, role)
+    VALUES (?, ?, ?, ?)
+  `),
+  
+  findByUsername: db.prepare('SELECT * FROM users WHERE username = ?'),
+  findById: db.prepare('SELECT * FROM users WHERE id = ?'),
+  
+  updateLastLogin: db.prepare(`
+    UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = ?
+  `),
+  
+  getAll: db.prepare('SELECT * FROM users ORDER BY created_at DESC'),
+  
+  updateRole: db.prepare('UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'),
+  
+  update: db.prepare(`
+    UPDATE users 
+    SET username = ?, role = ?, updated_at = CURRENT_TIMESTAMP 
+    WHERE id = ?
+  `),
+  
+  delete: db.prepare('DELETE FROM users WHERE id = ?'),
+  
+  getStats: db.prepare(`
+    SELECT 
+      role,
+      COUNT(*) as count
+    FROM users 
+    GROUP BY role
+  `)
+}
+
+// Property operations
+export const propertyOperations = {
+  create: db.prepare(`
+    INSERT INTO properties (
+      id, title, description, price, currency, city, area, latitude, longitude,
+      type, bedrooms, bathrooms, size, features, owner_id, whatsapp_number, phone_number
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `),
+  
+  findById: db.prepare('SELECT * FROM properties WHERE id = ?'),
+  
+  getAll: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    ORDER BY p.created_at DESC
+  `),
+  
+  getApproved: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = 'approved'
+    ORDER BY p.created_at DESC
+  `),
+  
+  getByOwner: db.prepare(`
+    SELECT * FROM properties WHERE owner_id = ? ORDER BY created_at DESC
+  `),
+  
+  updateStatus: db.prepare('UPDATE properties SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'),
+  
+  search: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = 'approved' 
+    AND (p.title LIKE ? OR p.city LIKE ? OR p.area LIKE ?)
+    ORDER BY p.created_at DESC
+  `),
+  
+  filter: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = 'approved'
+    AND (? IS NULL OR p.type = ?)
+    AND (? IS NULL OR p.city = ?)
+    AND (? IS NULL OR p.price >= ?)
+    AND (? IS NULL OR p.price <= ?)
+    AND (? IS NULL OR p.bedrooms >= ?)
+    AND (? IS NULL OR p.bathrooms >= ?)
+    ORDER BY p.created_at DESC
+  `),
+  
+  update: db.prepare(`
+    UPDATE properties 
+    SET title = ?, description = ?, price = ?, currency = ?, city = ?, area = ?, 
+        type = ?, bedrooms = ?, bathrooms = ?, size = ?, features = ?, 
+        whatsapp_number = ?, phone_number = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `),
+  
+  delete: db.prepare('DELETE FROM properties WHERE id = ?'),
+  
+  getStats: db.prepare(`
+    SELECT 
+      status,
+      COUNT(*) as count,
+      AVG(price) as avg_price
+    FROM properties 
+    GROUP BY status
+  `),
+  
+  getByStatus: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = ?
+    ORDER BY p.created_at DESC
+  `)
+}
+
+// Payment operations
+export const paymentOperations = {
+  create: db.prepare(`
+    INSERT INTO payments (id, property_id, user_id, amount, payment_type)
+    VALUES (?, ?, ?, ?, ?)
+  `),
+  
+  findById: db.prepare('SELECT * FROM payments WHERE id = ?'),
+  
+  findByProperty: db.prepare('SELECT * FROM payments WHERE property_id = ?'),
+  
+  getPending: db.prepare(`
+    SELECT p.*, pr.title as property_title, u.username as user_name, u.username as user_phone
+    FROM payments p
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.status = 'pending'
+    ORDER BY p.created_at DESC
+  `),
+  
+  updateStatus: db.prepare(`
+    UPDATE payments 
+    SET status = ?, admin_notes = ?, confirmed_at = CASE WHEN ? = 'confirmed' THEN CURRENT_TIMESTAMP ELSE confirmed_at END
+    WHERE id = ?
+  `),
+  
+  getByUser: db.prepare(`
+    SELECT p.*, pr.title as property_title
+    FROM payments p
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    WHERE p.user_id = ?
+    ORDER BY p.created_at DESC
+  `),
+  
+  getAll: db.prepare(`
+    SELECT p.*, pr.title as property_title, u.username as user_name, u.username as user_phone
+    FROM payments p
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    LEFT JOIN users u ON p.user_id = u.id
+    ORDER BY p.created_at DESC
+  `),
+  
+  getStats: db.prepare(`
+    SELECT 
+      status,
+      COUNT(*) as count,
+      SUM(amount) as total_amount
+    FROM payments 
+    GROUP BY status
+  `)
+}
+
+// Favorite operations
+export const favoriteOperations = {
+  add: db.prepare(`
+    INSERT OR IGNORE INTO favorites (id, user_id, property_id)
+    VALUES (?, ?, ?)
+  `),
+  
+  remove: db.prepare('DELETE FROM favorites WHERE user_id = ? AND property_id = ?'),
+  
+  getByUser: db.prepare(`
+    SELECT p.*, u.username as owner_name, f.created_at as favorited_at
+    FROM favorites f
+    JOIN properties p ON f.property_id = p.id
+    LEFT JOIN users u ON p.owner_id = u.id
+    WHERE f.user_id = ?
+    ORDER BY f.created_at DESC
+  `),
+  
+  checkExists: db.prepare('SELECT id FROM favorites WHERE user_id = ? AND property_id = ? LIMIT 1')
+}
+
+// Property image operations
+export const imageOperations = {
+  add: db.prepare(`
+    INSERT INTO property_images (id, property_id, image_url, is_primary)
+    VALUES (?, ?, ?, ?)
+  `),
+  
+  getByProperty: db.prepare('SELECT * FROM property_images WHERE property_id = ? ORDER BY is_primary DESC, created_at ASC'),
+  
+  delete: db.prepare('DELETE FROM property_images WHERE id = ?'),
+  
+  setPrimary: db.prepare(`
+    UPDATE property_images 
+    SET is_primary = CASE WHEN id = ? THEN TRUE ELSE FALSE END 
+    WHERE property_id = ?
+  `)
+}
+
+// System settings operations
+export const settingsOperations = {
+  get: db.prepare('SELECT value FROM system_settings WHERE key = ?'),
+  set: db.prepare('INSERT OR REPLACE INTO system_settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)'),
+  getAll: db.prepare('SELECT * FROM system_settings ORDER BY key')
+}
+
+// WhatsApp confirmation operations
+export const whatsappOperations = {
+  addConfirmation: db.prepare(`
+    INSERT INTO whatsapp_confirmations (id, payment_id, sender_number, message_content)
+    VALUES (?, ?, ?, ?)
+  `),
+  
+  getPending: db.prepare(`
+    SELECT w.*, p.amount, p.payment_type, pr.title as property_title, u.username as user_name
+    FROM whatsapp_confirmations w
+    LEFT JOIN payments p ON w.payment_id = p.id
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE w.processed = FALSE
+    ORDER BY w.received_at DESC
+  `),
+  
+  markProcessed: db.prepare('UPDATE whatsapp_confirmations SET processed = TRUE WHERE id = ?')
+}
+
+// Admin log operations
+export const adminLogOperations = {
+  create: db.prepare(`
+    INSERT INTO admin_logs (id, admin_id, action, target_type, target_id, details, ip_address)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `),
+  
+  getAll: db.prepare(`
+    SELECT al.id, al.admin_id, al.action, al.target_type, al.target_id, al.details, al.ip_address, al.created_at, u.username as admin_name
+    FROM admin_logs al
+    LEFT JOIN users u ON al.admin_id = u.id
+    ORDER BY al.created_at DESC
+    LIMIT ?
+  `),
+  
+  getByAdmin: db.prepare(`
+    SELECT al.id, al.admin_id, al.action, al.target_type, al.target_id, al.details, al.ip_address, al.created_at, u.username as admin_name
+    FROM admin_logs al
+    LEFT JOIN users u ON al.admin_id = u.id
+    WHERE al.admin_id = ?
+    ORDER BY al.created_at DESC
+    LIMIT ?
+  `),
+  
+  getByTarget: db.prepare(`
+    SELECT al.id, al.admin_id, al.action, al.target_type, al.target_id, al.details, al.ip_address, al.created_at, u.username as admin_name
+    FROM admin_logs al
+    LEFT JOIN users u ON al.admin_id = u.id
+    WHERE al.target_type = ? AND al.target_id = ?
+    ORDER BY al.created_at DESC
+  `)
+}
+
+// Initialize database on import (with error handling)
+try {
+  initializeDatabase()
+  console.log('✅ Database initialized successfully')
+} catch (error) {
+  console.error('❌ Database initialization failed:', (error as any).message)
+  console.error('❌ This may cause API errors')
+}
+
+export default db
+import Database from 'better-sqlite3'
+import { join } from 'path'
+import bcrypt from 'bcryptjs'
+
+// If you deploy with a remote DB, set `DATABASE_URL` and the init will be skipped.
+const useRemoteDb = !!process.env.DATABASE_URL
+
+// Local SQLite DB path
+const dbPath = join(process.cwd(), 'data', 'broker.db')
+const db = new Database(dbPath)
+
+// Enable foreign keys
+db.pragma('foreign_keys = ON')
+
+// Initialize database tables
+export function initializeDatabase() {
+  // Single users table for admin, broker, and regular users
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT CHECK(role IN ('admin', 'broker', 'user')) DEFAULT 'user',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Properties table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS properties (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT,
+      price REAL NOT NULL,
+      currency TEXT DEFAULT 'ETB',
+      city TEXT NOT NULL,
+      area TEXT NOT NULL,
+      latitude REAL,
+      longitude REAL,
+      type TEXT CHECK(type IN ('house_sale', 'house_rent', 'apartment', 'land')) NOT NULL,
+      bedrooms INTEGER,
+      bathrooms INTEGER,
+      size REAL NOT NULL,
+      features TEXT, -- JSON string
+      status TEXT CHECK(status IN ('pending_payment', 'pending', 'approved', 'sold', 'rejected')) DEFAULT 'pending_payment',
+      owner_id TEXT NOT NULL,
+      broker_id TEXT,
+      whatsapp_number TEXT NOT NULL,
+      phone_number TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (owner_id) REFERENCES users (id),
+      FOREIGN KEY (broker_id) REFERENCES users (id)
+    )
+  `)
+
+  // Property images table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS property_images (
+      id TEXT PRIMARY KEY,
+      property_id TEXT NOT NULL,
+      image_url TEXT NOT NULL,
+      is_primary BOOLEAN DEFAULT FALSE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE CASCADE
+    )
+  `)
+
+  // Favorites table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS favorites (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      property_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, property_id),
+      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+      FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE CASCADE
+    )
+  `)
+
+  // Payments table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY,
+      property_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      amount REAL NOT NULL,
+      currency TEXT DEFAULT 'ETB',
+      payment_type TEXT CHECK(payment_type IN ('rent_listing', 'sale_listing')) NOT NULL,
+      status TEXT CHECK(status IN ('pending', 'confirmed', 'rejected')) DEFAULT 'pending',
+      whatsapp_confirmation_message TEXT,
+
+      admin_notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      confirmed_at DATETIME,
+      FOREIGN KEY (property_id) REFERENCES properties (id),
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+  `)
+
+  // WhatsApp confirmations table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS whatsapp_confirmations (
+      id TEXT PRIMARY KEY,
+      payment_id TEXT NOT NULL,
+      sender_number TEXT NOT NULL,
+      message_content TEXT NOT NULL,
+      received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      processed BOOLEAN DEFAULT FALSE,
+      FOREIGN KEY (payment_id) REFERENCES payments (id)
+    )
+  `)
+
+  // Admin logs table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS admin_logs (
+      id TEXT PRIMARY KEY,
+      admin_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      target_type TEXT CHECK(target_type IN ('user', 'property', 'payment', 'system')) NOT NULL,
+      target_id TEXT,
+      details TEXT,
+      ip_address TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (admin_id) REFERENCES users (id)
+    )
+  `)
+
+  // System settings table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Insert default system settings
+  const insertSetting = db.prepare(`
+    INSERT OR IGNORE INTO system_settings (key, value) VALUES (?, ?)
+  `)
+  
+  insertSetting.run('rent_listing_fee', '25')
+  insertSetting.run('sale_listing_fee', '50')
+  insertSetting.run('whatsapp_contact_placeholder', 'WHATSAPP_CONTACT_PLACEHOLDER')
+
+
+  // Create default admin user
+  createDefaultAdmin()
+}
+
+function createDefaultAdmin() {
+  // Check if default admin exists in users table
+  const existingAdmin = db.prepare('SELECT id FROM users WHERE username = ? LIMIT 1').get('admin')
+  
+  if (!existingAdmin) {
+    // Create new admin account
+    console.log('🔐 Setting up default admin account...')
+    
+    const adminPassword = 'admin123'
+    const hashedPassword = bcrypt.hashSync(adminPassword, 12)
+    const adminId = 'admin-' + Date.now()
+    
+    // Create in users table with username-based authentication
+    db.prepare(`
+      INSERT INTO users (id, username, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `).run(
+      adminId,
+      'admin',
+      hashedPassword,
+      'admin'
+    )
+    
+    console.log('✅ Default admin account created:')
+    console.log('   Username: admin')
+    console.log('   Password: admin123')
+    console.log('   Role: admin')
+  } else {
+    console.log('✅ Default admin account already exists')
+  }
+}
+
+// Removed admin operations and OTP operations - using single users table now
+
+// User operations (for both admin and regular users)
+export const userOperations = {
+  create: db.prepare(`
+    INSERT INTO users (id, username, password_hash, role)
+    VALUES (?, ?, ?, ?)
+  `),
+  
+  findByUsername: db.prepare('SELECT * FROM users WHERE username = ?'),
+  findById: db.prepare('SELECT * FROM users WHERE id = ?'),
+  
+  updateLastLogin: db.prepare(`
+    UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = ?
+  `),
+  
+  getAll: db.prepare('SELECT * FROM users ORDER BY created_at DESC'),
+  
+  updateRole: db.prepare('UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'),
+  
+  update: db.prepare(`
+    UPDATE users 
+    SET username = ?, role = ?, updated_at = CURRENT_TIMESTAMP 
+    WHERE id = ?
+  `),
+  
+  delete: db.prepare('DELETE FROM users WHERE id = ?'),
+  
+  getStats: db.prepare(`
+    SELECT 
+      role,
+      COUNT(*) as count
+    FROM users 
+    GROUP BY role
+  `)
+}
+
+// Property operations
+export const propertyOperations = {
+  create: db.prepare(`
+    INSERT INTO properties (
+      id, title, description, price, currency, city, area, latitude, longitude,
+      type, bedrooms, bathrooms, size, features, owner_id, whatsapp_number, phone_number
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `),
+  
+  findById: db.prepare('SELECT * FROM properties WHERE id = ?'),
+  
+  getAll: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    ORDER BY p.created_at DESC
+  `),
+  
+  getApproved: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = 'approved'
+    ORDER BY p.created_at DESC
+  `),
+  
+  getByOwner: db.prepare(`
+    SELECT * FROM properties WHERE owner_id = ? ORDER BY created_at DESC
+  `),
+  
+  updateStatus: db.prepare('UPDATE properties SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'),
+  
+  search: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = 'approved' 
+    AND (p.title LIKE ? OR p.city LIKE ? OR p.area LIKE ?)
+    ORDER BY p.created_at DESC
+  `),
+  
+  filter: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = 'approved'
+    AND (? IS NULL OR p.type = ?)
+    AND (? IS NULL OR p.city = ?)
+    AND (? IS NULL OR p.price >= ?)
+    AND (? IS NULL OR p.price <= ?)
+    AND (? IS NULL OR p.bedrooms >= ?)
+    AND (? IS NULL OR p.bathrooms >= ?)
+    ORDER BY p.created_at DESC
+  `),
+  
+  update: db.prepare(`
+    UPDATE properties 
+    SET title = ?, description = ?, price = ?, currency = ?, city = ?, area = ?, 
+        type = ?, bedrooms = ?, bathrooms = ?, size = ?, features = ?, 
+        whatsapp_number = ?, phone_number = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `),
+  
+  delete: db.prepare('DELETE FROM properties WHERE id = ?'),
+  
+  getStats: db.prepare(`
+    SELECT 
+      status,
+      COUNT(*) as count,
+      AVG(price) as avg_price
+    FROM properties 
+    GROUP BY status
+  `),
+  
+  getByStatus: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = ?
+    ORDER BY p.created_at DESC
+  `)
+}
+
+// Payment operations
+export const paymentOperations = {
+  create: db.prepare(`
+    INSERT INTO payments (id, property_id, user_id, amount, payment_type)
+    VALUES (?, ?, ?, ?, ?)
+  `),
+  
+  findById: db.prepare('SELECT * FROM payments WHERE id = ?'),
+  
+  findByProperty: db.prepare('SELECT * FROM payments WHERE property_id = ?'),
+  
+  getPending: db.prepare(`
+    SELECT p.*, pr.title as property_title, u.username as user_name, u.username as user_phone
+    FROM payments p
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.status = 'pending'
+    ORDER BY p.created_at DESC
+  `),
+  
+  updateStatus: db.prepare(`
+    UPDATE payments 
+    SET status = ?, admin_notes = ?, confirmed_at = CASE WHEN ? = 'confirmed' THEN CURRENT_TIMESTAMP ELSE confirmed_at END
+    WHERE id = ?
+  `),
+  
+  getByUser: db.prepare(`
+    SELECT p.*, pr.title as property_title
+    FROM payments p
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    WHERE p.user_id = ?
+    ORDER BY p.created_at DESC
+  `),
+  
+  getAll: db.prepare(`
+    SELECT p.*, pr.title as property_title, u.username as user_name, u.username as user_phone
+    FROM payments p
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    LEFT JOIN users u ON p.user_id = u.id
+    ORDER BY p.created_at DESC
+  `),
+  
+  getStats: db.prepare(`
+    SELECT 
+      status,
+      COUNT(*) as count,
+      SUM(amount) as total_amount
+    FROM payments 
+    GROUP BY status
+  `)
+}
+
+// Favorite operations
+export const favoriteOperations = {
+  add: db.prepare(`
+    INSERT OR IGNORE INTO favorites (id, user_id, property_id)
+    VALUES (?, ?, ?)
+  `),
+  
+  remove: db.prepare('DELETE FROM favorites WHERE user_id = ? AND property_id = ?'),
+  
+  getByUser: db.prepare(`
+    SELECT p.*, u.username as owner_name, f.created_at as favorited_at
+    FROM favorites f
+    JOIN properties p ON f.property_id = p.id
+    LEFT JOIN users u ON p.owner_id = u.id
+    WHERE f.user_id = ?
+    ORDER BY f.created_at DESC
+  `),
+  
+  checkExists: db.prepare('SELECT id FROM favorites WHERE user_id = ? AND property_id = ? LIMIT 1')
+}
+
+// Property image operations
+export const imageOperations = {
+  add: db.prepare(`
+    INSERT INTO property_images (id, property_id, image_url, is_primary)
+    VALUES (?, ?, ?, ?)
+  `),
+  
+  getByProperty: db.prepare('SELECT * FROM property_images WHERE property_id = ? ORDER BY is_primary DESC, created_at ASC'),
+  
+  delete: db.prepare('DELETE FROM property_images WHERE id = ?'),
+  
+  setPrimary: db.prepare(`
+    UPDATE property_images 
+    SET is_primary = CASE WHEN id = ? THEN TRUE ELSE FALSE END 
+    WHERE property_id = ?
+  `)
+}
+
+// System settings operations
+export const settingsOperations = {
+  get: db.prepare('SELECT value FROM system_settings WHERE key = ?'),
+  set: db.prepare('INSERT OR REPLACE INTO system_settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)'),
+  getAll: db.prepare('SELECT * FROM system_settings ORDER BY key')
+}
+
+// WhatsApp confirmation operations
+export const whatsappOperations = {
+  addConfirmation: db.prepare(`
+    INSERT INTO whatsapp_confirmations (id, payment_id, sender_number, message_content)
+    VALUES (?, ?, ?, ?)
+  `),
+  
+  getPending: db.prepare(`
+    SELECT w.*, p.amount, p.payment_type, pr.title as property_title, u.username as user_name
+    FROM whatsapp_confirmations w
+    LEFT JOIN payments p ON w.payment_id = p.id
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE w.processed = FALSE
+    ORDER BY w.received_at DESC
+  `),
+  
+  markProcessed: db.prepare('UPDATE whatsapp_confirmations SET processed = TRUE WHERE id = ?')
+}
+
+// Admin log operations
+export const adminLogOperations = {
+  create: db.prepare(`
+    INSERT INTO admin_logs (id, admin_id, action, target_type, target_id, details, ip_address)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `),
+  
+  getAll: db.prepare(`
+    SELECT al.id, al.admin_id, al.action, al.target_type, al.target_id, al.details, al.ip_address, al.created_at, u.username as admin_name
+    FROM admin_logs al
+    LEFT JOIN users u ON al.admin_id = u.id
+    ORDER BY al.created_at DESC
+    LIMIT ?
+  `),
+  
+  getByAdmin: db.prepare(`
+    SELECT al.id, al.admin_id, al.action, al.target_type, al.target_id, al.details, al.ip_address, al.created_at, u.username as admin_name
+    FROM admin_logs al
+    LEFT JOIN users u ON al.admin_id = u.id
+    WHERE al.admin_id = ?
+    ORDER BY al.created_at DESC
+    LIMIT ?
+  `),
+  
+  getByTarget: db.prepare(`
+    SELECT al.id, al.admin_id, al.action, al.target_type, al.target_id, al.details, al.ip_address, al.created_at, u.username as admin_name
+    FROM admin_logs al
+    LEFT JOIN users u ON al.admin_id = u.id
+    WHERE al.target_type = ? AND al.target_id = ?
+    ORDER BY al.created_at DESC
+  `)
+}
+
+// Initialize database on import (with error handling)
+try {
+  if (!useRemoteDb) {
+    initializeDatabase()
+    console.log('✅ Database initialized successfully')
+  } else {
+    console.log('⚠️ DATABASE_URL detected — skipped local SQLite initialization')
+  }
+} catch (error: any) {
+  console.error('❌ Database initialization failed:', error?.message || error)
+  console.error('❌ This may cause API errors')
+}
+
+export default db
+import { join } from 'path'
+import bcrypt from 'bcryptjs'
+
+// Prefer a remote database when `DATABASE_URL` is provided (e.g. Postgres/Supabase).
+// When `DATABASE_URL` is set we skip creating a local SQLite DB and instead
+// export stubbed operations that throw clear errors instructing the operator
+// to configure a remote DB. This keeps the codebase safe to deploy to Vercel
+// while preserving the local SQLite workflow for development (when
+// `DATABASE_URL` is not set).
+
+const useRemoteDb = !!process.env.DATABASE_URL
+
+if (useRemoteDb) {
+  console.warn('Using remote database via DATABASE_URL; skipping local SQLite initialization')
+}
+
+// Local SQLite initialization (only when DATABASE_URL is NOT set)
+let db: any = null
+function initializeDatabase() {
+  // Single users table for admin, broker, and regular users
+  if (!db) return
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT CHECK(role IN ('admin', 'broker', 'user')) DEFAULT 'user',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Properties table
+  export const userOperations = (() => {
+    if (useRemoteDb) {
+      const thrower = () => { throw new Error('Database not initialized: DATABASE_URL is set. Configure a remote DB client and implement operations for production.') }
+      return {
+        create: thrower,
+        findByUsername: thrower,
+        findById: thrower,
+        updateLastLogin: thrower,
+        getAll: thrower,
+        updateRole: thrower,
+        update: thrower,
+        delete: thrower,
+        getStats: thrower
+      } as any
+    }
+
+    return {
+    CREATE TABLE IF NOT EXISTS properties (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT,
+      price REAL NOT NULL,
+      currency TEXT DEFAULT 'ETB',
+      city TEXT NOT NULL,
+      area TEXT NOT NULL,
+      latitude REAL,
+      longitude REAL,
+      type TEXT CHECK(type IN ('house_sale', 'house_rent', 'apartment', 'land')) NOT NULL,
+      bedrooms INTEGER,
+      bathrooms INTEGER,
+      size REAL NOT NULL,
+      features TEXT, -- JSON string
+      status TEXT CHECK(status IN ('pending_payment', 'pending', 'approved', 'sold', 'rejected')) DEFAULT 'pending_payment',
+      owner_id TEXT NOT NULL,
+      broker_id TEXT,
+      whatsapp_number TEXT NOT NULL,
+      phone_number TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (owner_id) REFERENCES users (id),
+      FOREIGN KEY (broker_id) REFERENCES users (id)
+    )
+  `)
+
+  // Property images table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS property_images (
+      id TEXT PRIMARY KEY,
+      property_id TEXT NOT NULL,
+      image_url TEXT NOT NULL,
+      is_primary BOOLEAN DEFAULT FALSE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE CASCADE
+    )
+  `)
+
+  // Favorites table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS favorites (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      property_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, property_id),
+      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+      FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE CASCADE
+    )
+  `)
+
+  // Payments table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY,
+      property_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      amount REAL NOT NULL,
+      currency TEXT DEFAULT 'ETB',
+      payment_type TEXT CHECK(payment_type IN ('rent_listing', 'sale_listing')) NOT NULL,
+      status TEXT CHECK(status IN ('pending', 'confirmed', 'rejected')) DEFAULT 'pending',
+      whatsapp_confirmation_message TEXT,
+
+      admin_notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      confirmed_at DATETIME,
+      FOREIGN KEY (property_id) REFERENCES properties (id),
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+  `)
+
+  // WhatsApp confirmations table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS whatsapp_confirmations (
+      id TEXT PRIMARY KEY,
+      payment_id TEXT NOT NULL,
+      sender_number TEXT NOT NULL,
+      message_content TEXT NOT NULL,
+      received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      processed BOOLEAN DEFAULT FALSE,
+      FOREIGN KEY (payment_id) REFERENCES payments (id)
+    )
+  `)
+
+  // Admin logs table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS admin_logs (
+      id TEXT PRIMARY KEY,
+      admin_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      target_type TEXT CHECK(target_type IN ('user', 'property', 'payment', 'system')) NOT NULL,
+      target_id TEXT,
+      details TEXT,
+      ip_address TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (admin_id) REFERENCES users (id)
+    )
+  `)
+
+  // System settings table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Insert default system settings
+  const insertSetting = db.prepare(`
+    INSERT OR IGNORE INTO system_settings (key, value) VALUES (?, ?)
+  `)
+  
+  insertSetting.run('rent_listing_fee', '25')
+  insertSetting.run('sale_listing_fee', '50')
+  insertSetting.run('whatsapp_contact_placeholder', 'WHATSAPP_CONTACT_PLACEHOLDER')
+
+
+  // Create default admin user
+  createDefaultAdmin()
+}
+
+function createDefaultAdmin() {
+  // Check if default admin exists in users table
+  const existingAdmin = db.prepare('SELECT id FROM users WHERE username = ? LIMIT 1').get('admin')
+  
+  if (!existingAdmin) {
+    // Create new admin account
+    console.log('🔐 Setting up default admin account...')
+    
+    const adminPassword = 'admin123'
+    const hashedPassword = bcrypt.hashSync(adminPassword, 12)
+    const adminId = 'admin-' + Date.now()
+    
+    // Create in users table with username-based authentication
+    db.prepare(`
+      INSERT INTO users (id, username, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `).run(
+      adminId,
+      'admin',
+      hashedPassword,
+      'admin'
+    )
+    
+    console.log('✅ Default admin account created:')
+    console.log('   Username: admin')
+    console.log('   Password: admin123')
+    console.log('   Role: admin')
+  } else {
+    console.log('✅ Default admin account already exists')
+  }
+}
+
+// Removed admin operations and OTP operations - using single users table now
+
+// User operations (for both admin and regular users)
+export const userOperations = {
+  create: db.prepare(`
+    INSERT INTO users (id, username, password_hash, role)
+    VALUES (?, ?, ?, ?)
+  `),
+  
+  findByUsername: db.prepare('SELECT * FROM users WHERE username = ?'),
+  findById: db.prepare('SELECT * FROM users WHERE id = ?'),
+  
+  updateLastLogin: db.prepare(`
+    UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = ?
+  `),
+  
+  getAll: db.prepare('SELECT * FROM users ORDER BY created_at DESC'),
+  
+  updateRole: db.prepare('UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'),
+  
+  update: db.prepare(`
+    UPDATE users 
+    SET username = ?, role = ?, updated_at = CURRENT_TIMESTAMP 
+    WHERE id = ?
+  `),
+  
+  delete: db.prepare('DELETE FROM users WHERE id = ?'),
+  
+  getStats: db.prepare(`
+    SELECT 
+      role,
+      COUNT(*) as count
+    FROM users 
+    GROUP BY role
+  `)
+}
+
+// Property operations
+export const propertyOperations = {
+  create: db.prepare(`
+    INSERT INTO properties (
+      id, title, description, price, currency, city, area, latitude, longitude,
+      type, bedrooms, bathrooms, size, features, owner_id, whatsapp_number, phone_number
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `),
+  
+  findById: db.prepare('SELECT * FROM properties WHERE id = ?'),
+  
+  getAll: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    ORDER BY p.created_at DESC
+  `),
+  
+  getApproved: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = 'approved'
+    ORDER BY p.created_at DESC
+  `),
+  
+  getByOwner: db.prepare(`
+    SELECT * FROM properties WHERE owner_id = ? ORDER BY created_at DESC
+  `),
+  
+  updateStatus: db.prepare('UPDATE properties SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'),
+  
+  search: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = 'approved' 
+    AND (p.title LIKE ? OR p.city LIKE ? OR p.area LIKE ?)
+    ORDER BY p.created_at DESC
+  `),
+  
+  filter: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = 'approved'
+    AND (? IS NULL OR p.type = ?)
+    AND (? IS NULL OR p.city = ?)
+    AND (? IS NULL OR p.price >= ?)
+    AND (? IS NULL OR p.price <= ?)
+    AND (? IS NULL OR p.bedrooms >= ?)
+    AND (? IS NULL OR p.bathrooms >= ?)
+    ORDER BY p.created_at DESC
+  `),
+  
+  update: db.prepare(`
+    UPDATE properties 
+    SET title = ?, description = ?, price = ?, currency = ?, city = ?, area = ?, 
+        type = ?, bedrooms = ?, bathrooms = ?, size = ?, features = ?, 
+        whatsapp_number = ?, phone_number = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `),
+  
+  delete: db.prepare('DELETE FROM properties WHERE id = ?'),
+  
+  getStats: db.prepare(`
+    SELECT 
+      status,
+      COUNT(*) as count,
+      AVG(price) as avg_price
+    FROM properties 
+    GROUP BY status
+  `),
+  
+  getByStatus: db.prepare(`
+    SELECT p.*, u.username as owner_name 
+    FROM properties p 
+    LEFT JOIN users u ON p.owner_id = u.id 
+    WHERE p.status = ?
+    ORDER BY p.created_at DESC
+  `)
+}
+
+// Payment operations
+export const paymentOperations = {
+  create: db.prepare(`
+    INSERT INTO payments (id, property_id, user_id, amount, payment_type)
+    VALUES (?, ?, ?, ?, ?)
+  `),
+  
+  findById: db.prepare('SELECT * FROM payments WHERE id = ?'),
+  
+  findByProperty: db.prepare('SELECT * FROM payments WHERE property_id = ?'),
+  
+  getPending: db.prepare(`
+    SELECT p.*, pr.title as property_title, u.username as user_name, u.username as user_phone
+    FROM payments p
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.status = 'pending'
+    ORDER BY p.created_at DESC
+  `),
+  
+  updateStatus: db.prepare(`
+    UPDATE payments 
+    SET status = ?, admin_notes = ?, confirmed_at = CASE WHEN ? = 'confirmed' THEN CURRENT_TIMESTAMP ELSE confirmed_at END
+    WHERE id = ?
+  `),
+  
+  getByUser: db.prepare(`
+    SELECT p.*, pr.title as property_title
+    FROM payments p
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    WHERE p.user_id = ?
+    ORDER BY p.created_at DESC
+  `),
+  
+  getAll: db.prepare(`
+    SELECT p.*, pr.title as property_title, u.username as user_name, u.username as user_phone
+    FROM payments p
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    LEFT JOIN users u ON p.user_id = u.id
+    ORDER BY p.created_at DESC
+  `),
+  
+  getStats: db.prepare(`
+    SELECT 
+      status,
+      COUNT(*) as count,
+      SUM(amount) as total_amount
+    FROM payments 
+    GROUP BY status
+  `)
+}
+
+// Favorite operations
+export const favoriteOperations = {
+  add: db.prepare(`
+    INSERT OR IGNORE INTO favorites (id, user_id, property_id)
+    VALUES (?, ?, ?)
+  `),
+  
+  remove: db.prepare('DELETE FROM favorites WHERE user_id = ? AND property_id = ?'),
+  
+  getByUser: db.prepare(`
+    SELECT p.*, u.username as owner_name, f.created_at as favorited_at
+    FROM favorites f
+    JOIN properties p ON f.property_id = p.id
+    LEFT JOIN users u ON p.owner_id = u.id
+    WHERE f.user_id = ?
+    ORDER BY f.created_at DESC
+  `),
+  
+  checkExists: db.prepare('SELECT id FROM favorites WHERE user_id = ? AND property_id = ? LIMIT 1')
+}
+
+// Property image operations
+export const imageOperations = {
+  add: db.prepare(`
+    INSERT INTO property_images (id, property_id, image_url, is_primary)
+    VALUES (?, ?, ?, ?)
+  `),
+  
+  getByProperty: db.prepare('SELECT * FROM property_images WHERE property_id = ? ORDER BY is_primary DESC, created_at ASC'),
+  
+  delete: db.prepare('DELETE FROM property_images WHERE id = ?'),
+  
+  setPrimary: db.prepare(`
+    UPDATE property_images 
+    SET is_primary = CASE WHEN id = ? THEN TRUE ELSE FALSE END 
+    WHERE property_id = ?
+  `)
+}
+
+// System settings operations
+export const settingsOperations = {
+  get: db.prepare('SELECT value FROM system_settings WHERE key = ?'),
+  set: db.prepare('INSERT OR REPLACE INTO system_settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)'),
+  getAll: db.prepare('SELECT * FROM system_settings ORDER BY key')
+}
+
+// WhatsApp confirmation operations
+export const whatsappOperations = {
+  addConfirmation: db.prepare(`
+    INSERT INTO whatsapp_confirmations (id, payment_id, sender_number, message_content)
+    VALUES (?, ?, ?, ?)
+  `),
+  
+  getPending: db.prepare(`
+    SELECT w.*, p.amount, p.payment_type, pr.title as property_title, u.username as user_name
+    FROM whatsapp_confirmations w
+    LEFT JOIN payments p ON w.payment_id = p.id
+    LEFT JOIN properties pr ON p.property_id = pr.id
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE w.processed = FALSE
+    ORDER BY w.received_at DESC
+  `),
+  
+  markProcessed: db.prepare('UPDATE whatsapp_confirmations SET processed = TRUE WHERE id = ?')
+}
+
+// Admin log operations
+export const adminLogOperations = {
+  create: db.prepare(`
+    INSERT INTO admin_logs (id, admin_id, action, target_type, target_id, details, ip_address)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `),
+  
+  getAll: db.prepare(`
+    SELECT al.id, al.admin_id, al.action, al.target_type, al.target_id, al.details, al.ip_address, al.created_at, u.username as admin_name
+    FROM admin_logs al
+    LEFT JOIN users u ON al.admin_id = u.id
+    ORDER BY al.created_at DESC
+    LIMIT ?
+  `),
+  
+  getByAdmin: db.prepare(`
+    SELECT al.id, al.admin_id, al.action, al.target_type, al.target_id, al.details, al.ip_address, al.created_at, u.username as admin_name
+    FROM admin_logs al
+    LEFT JOIN users u ON al.admin_id = u.id
+    WHERE al.admin_id = ?
+    ORDER BY al.created_at DESC
+    LIMIT ?
+  `),
+  
+  getByTarget: db.prepare(`
+    SELECT al.id, al.admin_id, al.action, al.target_type, al.target_id, al.details, al.ip_address, al.created_at, u.username as admin_name
+    FROM admin_logs al
+    LEFT JOIN users u ON al.admin_id = u.id
+    WHERE al.target_type = ? AND al.target_id = ?
+    ORDER BY al.created_at DESC
+  `)
+}
+
+// Initialize database on import (with error handling)
+try {
+  initializeDatabase()
+  console.log('✅ Database initialized successfully')
+} catch (error) {
+  console.error('❌ Database initialization failed:', error.message)
+  console.error('❌ This may cause API errors')
+}
+
+export default db

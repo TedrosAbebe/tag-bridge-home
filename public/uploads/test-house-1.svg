@@ -1,0 +1,8 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#4f81bd"/>
+        <rect x="50" y="100" width="300" height="150" fill="#8b4513"/>
+        <polygon points="200,50 100,100 300,100" fill="#dc143c"/>
+        <rect x="120" y="150" width="60" height="80" fill="#654321"/>
+        <rect x="220" y="150" width="60" height="60" fill="#87ceeb"/>
+        <text x="200" y="280" font-family="Arial" font-size="16" fill="white" text-anchor="middle">Beautiful House</text>
+      </svg>

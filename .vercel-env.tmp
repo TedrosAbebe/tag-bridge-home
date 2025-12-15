@@ -1,0 +1,10 @@
+JWT_SECRET=tag-bridge-home-jwt-secret-change-this-in-production-2024
+ADMIN_SETUP_SECRET=tag-bridge-admin-setup-secret-change-this-2024
+ADMIN_SETUP_ENABLED=true
+WHATSAPP_CONTACT_PLACEHOLDER=+251991856292
+BANK_ACCOUNT_PLACEHOLDER="CBE Bank - Account: 1000200450705"
+DATABASE_URL=./data/broker.db
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+EMAIL_SERVICE=gmail
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
