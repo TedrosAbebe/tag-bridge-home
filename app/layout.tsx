@@ -19,20 +19,15 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style dangerouslySetInnerHTML={{
           __html: `
-            /* Force CSS classes to be included */
-            .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
-            .from-green-600 { --tw-gradient-from: #16a34a; }
-            .to-blue-600 { --tw-gradient-to: #2563eb; }
+            /* Ensure critical CSS classes are available */
             .bg-ethiopian-green { background-color: #009639 !important; }
             .bg-ethiopian-blue { background-color: #0F4C75 !important; }
-            .animate-bounce { animation: 1s infinite bounce; }
-            .animate-pulse { animation: 2s cubic-bezier(.4,0,.6,1) infinite pulse; }
-            @keyframes bounce { 0%, 100% { transform: translateY(-25%); } 50% { transform: none; } }
-            @keyframes pulse { 50% { opacity: .5; } }
+            .bg-ethiopian-yellow { background-color: #FFCD00 !important; }
+            .bg-ethiopian-red { background-color: #DA020E !important; }
           `
         }} />
       </head>
-      <body className="antialiased bg-gradient-to-r from-green-600 to-blue-600 bg-ethiopian-green animate-bounce animate-pulse">
+      <body className="antialiased">
         <LanguageProvider>
           <AuthProvider>
             <Navigation />
