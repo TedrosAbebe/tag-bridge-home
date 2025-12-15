@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      submissions: mockSubmissions
+      submissions: submissions
     })
     
   } catch (error) {
