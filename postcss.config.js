@@ -2,8 +2,8 @@ module.exports = {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
-    // Add cssnano for production optimization
-    ...(process.env.NODE_ENV === 'production' ? {
+    // Only add cssnano in production builds, not development
+    ...(process.env.NODE_ENV === 'production' && process.env.VERCEL ? {
       cssnano: {
         preset: ['default', {
           discardComments: {
