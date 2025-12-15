@@ -44,7 +44,7 @@ export default function TestLiveLogin() {
     { username: 'admin', password: 'admin123', role: 'admin' },
     { username: 'broker1', password: 'broker123', role: 'broker' },
     { username: 'user1', password: 'user123', role: 'user' },
-    { username: 'tedros', password: 'tedros123', role: 'admin' }
+    { username: 'tedros', password: '494841', role: 'admin' }
   ]
 
   return (

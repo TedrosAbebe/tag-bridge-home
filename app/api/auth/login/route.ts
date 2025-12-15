@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         {
           id: '4',
           username: 'tedros',
-          password_hash: bcrypt.hashSync('tedros123', 10),
+          password_hash: bcrypt.hashSync('494841', 10),
           role: 'admin',
           created_at: new Date().toISOString()
         }
