@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { userOperations, brokerOperations } from '../../../../lib/supabase-database'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 export async function POST(request: NextRequest) {
-  console.log('🔐 Login API called (using Supabase)')
+  console.log('🔐 Login API called (using mock data)')
   
   try {
     const body = await request.json()
@@ -22,18 +21,50 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find user in Supabase
-    const user = await userOperations.findByUsername(username)
+    // Mock users database
+    const mockUsers = [
+      {
+        id: '1',
+        username: 'admin',
+        password_hash: bcrypt.hashSync('admin123', 10),
+        role: 'admin',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '2',
+        username: 'broker1',
+        password_hash: bcrypt.hashSync('broker123', 10),
+        role: 'broker',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '3',
+        username: 'user1',
+        password_hash: bcrypt.hashSync('user123', 10),
+        role: 'user',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '4',
+        username: 'tedros',
+        password_hash: bcrypt.hashSync('tedros123', 10),
+        role: 'admin',
+        created_at: new Date().toISOString()
+      }
+    ]
+
+    // Find user
+    const user = mockUsers.find(u => u.username === username)
     
     if (!user) {
-      console.log('❌ User not found in database:', username)
+      console.log('❌ User not found:', username)
       return NextResponse.json(
         { success: false, message: 'Invalid username or password' },
         { status: 401 }
       )
     }
 
-    console.log('✅ User found in database:', user.username, '(' + user.role + ')')
+    console.log('✅ User found:', user.username, '(' + user.role + ')')
 
     // Verify password
     if (!bcrypt.compareSync(password, user.password_hash)) {
@@ -46,20 +77,12 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Password verified for user:', user.username)
 
-    // Check broker approval status if user is a broker
+    // Mock broker status
     let brokerStatus = null
     if (user.role === 'broker') {
-      try {
-        const brokerInfo = await brokerOperations.findByUserId(user.id)
-        brokerStatus = brokerInfo?.status || 'pending'
-        console.log('📋 Broker status:', brokerStatus)
-      } catch (error) {
-        console.log('⚠️ Could not check broker status:', error)
-      }
+      brokerStatus = 'approved' // Mock approved status
+      console.log('📋 Broker status:', brokerStatus)
     }
-
-    // Update last login
-    await userOperations.updateLastLogin(user.id)
 
     // Generate token
     const token = jwt.sign(

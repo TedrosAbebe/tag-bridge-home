@@ -21,6 +21,9 @@ export default function PromotionalBanner() {
   const [closedBanners, setClosedBanners] = useState<string[]>([])
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
   const [loading, setLoading] = useState(true)
+  
+  // Fallback language to prevent runtime errors
+  const currentLanguage = language || 'en'
 
   // Fetch banners from API
   useEffect(() => {
@@ -103,10 +106,10 @@ export default function PromotionalBanner() {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold mb-1">
-              {currentBanner.title[language]}
+              {currentBanner.title[currentLanguage]}
             </h3>
             <p className="text-sm opacity-90">
-              {currentBanner.description[language]}
+              {currentBanner.description[currentLanguage]}
             </p>
           </div>
         </div>
@@ -134,7 +137,7 @@ export default function PromotionalBanner() {
             href={currentBanner.buttonLink}
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 border border-white/30"
           >
-            {currentBanner.buttonText[language]}
+            {currentBanner.buttonText[currentLanguage]}
           </a>
         </div>
       </div>

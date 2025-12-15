@@ -2,11 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Ethiopian colors */
-.ethiopian-green { color: #009639; }
-.ethiopian-yellow { color: #FFCD00; }
-.ethiopian-red { color: #DA020E; }
-.ethiopian-blue { color: #0F4C75; }
+/* Custom Ethiopian colors - Force load */
+.bg-ethiopian-green { background-color: #009639 !important; }
+.bg-ethiopian-yellow { background-color: #FFCD00 !important; }
+.bg-ethiopian-red { background-color: #DA020E !important; }
+.bg-ethiopian-blue { background-color: #0F4C75 !important; }
+.text-ethiopian-green { color: #009639 !important; }
+.text-ethiopian-yellow { color: #FFCD00 !important; }
+.text-ethiopian-red { color: #DA020E !important; }
+.text-ethiopian-blue { color: #0F4C75 !important; }
+.border-ethiopian-green { border-color: #009639 !important; }
 
 /* Custom animations */
 @keyframes fadeIn {

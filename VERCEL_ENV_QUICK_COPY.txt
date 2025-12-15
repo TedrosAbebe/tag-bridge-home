@@ -1,0 +1,38 @@
+VERCEL ENVIRONMENT VARIABLES - QUICK COPY FORMAT
+
+=== COPY EACH LINE BELOW INTO VERCEL ===
+
+Name: NEXT_PUBLIC_SUPABASE_URL
+Value: https://dgmegapwcstoohffprcr.supabase.co
+
+Name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+Value: sb_publishable_RyKOScmM0O6WDjdTRrJuNg_MgIVldGH
+
+Name: SUPABASE_SERVICE_KEY
+Value: sb_secret_Ot6lg
+
+Name: JWT_SECRET
+Value: tag_bridge_home_production_jwt_secret_2024_secure_key_ethiopia
+
+Name: ADMIN_SETUP_SECRET
+Value: tag_bridge_admin_setup_production_secret_2024_ethiopia
+
+Name: ADMIN_SETUP_ENABLED
+Value: true
+
+Name: WHATSAPP_CONTACT_PLACEHOLDER
+Value: +251991856292
+
+Name: BANK_ACCOUNT_PLACEHOLDER
+Value: CBE Bank - Account: 1000200450705
+
+Name: NEXT_PUBLIC_APP_URL
+Value: https://your-app.vercel.app
+
+=== INSTRUCTIONS ===
+1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+2. Click "Add New" for each variable above
+3. Copy the Name and Value exactly as shown
+4. Select: Production, Preview, Development
+5. Click Save for each variable
+6. Redeploy your project

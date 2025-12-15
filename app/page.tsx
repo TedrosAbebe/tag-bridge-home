@@ -473,6 +473,28 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      {/* Developer Section - Supabase Test */}
+      <section className="py-8 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-gray-700 mb-4">🧪 Developer Tools</h3>
+            <div className="flex justify-center space-x-4">
+              <Link 
+                href="/todos"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                📝 Test Supabase Connection
+              </Link>
+              <div className="text-sm text-gray-600 flex items-center">
+                <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                  process.env.NEXT_PUBLIC_SUPABASE_URL ? 'bg-green-500' : 'bg-red-500'
+                }`}></span>
+                Supabase {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Connected' : 'Not Configured'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
