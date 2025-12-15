@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '../../../../lib/auth'
-import { brokerOperations, userOperations } from '../../../../lib/auth-database'
+import { brokerOperations, userOperations } from '../../../../lib/supabase-database'
 
 export async function GET(request: NextRequest) {
   console.log('🏢 Admin broker applications API called')
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all broker applications
-    const applications = brokerOperations.getAll.all()
+    const applications = await brokerOperations.getAll()
     
     console.log('✅ Retrieved broker applications:', applications.length)
     return NextResponse.json({
@@ -88,13 +88,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update broker application status
-    brokerOperations.updateStatus.run(status, userId)
+    await brokerOperations.updateStatus(userId, status)
     
     // If approved, ensure user role is set to broker
     if (status === 'approved') {
-      const user = userOperations.findById.get(userId) as any
+      const user = await userOperations.findById(userId)
       if (user) {
-        userOperations.update.run(user.username, 'broker', userId)
+        await userOperations.update(userId, user.username, 'broker')
         console.log('✅ User role updated to broker:', user.username)
       }
     }
@@ -149,15 +149,12 @@ export async function DELETE(request: NextRequest) {
       
       if (deleteType === 'rejected') {
         // Get all rejected broker applications
-        const rejectedBrokers = brokerOperations.db.prepare('SELECT * FROM broker_info WHERE status = "rejected"').all() as any[]
+        const rejectedBrokers = await brokerOperations.getRejected()
         
         for (const broker of rejectedBrokers) {
           try {
-            // Delete broker info
-            brokerOperations.db.prepare('DELETE FROM broker_info WHERE user_id = ?').run(broker.user_id)
-            
-            // Delete user account
-            userOperations.delete.run(broker.user_id)
+            // Delete user account (will cascade delete broker_info)
+            await userOperations.delete(broker.user_id)
             
             deletedCount++
             console.log('✅ Deleted rejected broker:', broker.full_name)
@@ -167,15 +164,12 @@ export async function DELETE(request: NextRequest) {
         }
       } else if (deleteType === 'all') {
         // Get all broker applications
-        const allBrokers = brokerOperations.getAll.all() as any[]
+        const allBrokers = await brokerOperations.getAll()
         
         for (const broker of allBrokers) {
           try {
-            // Delete broker info
-            brokerOperations.db.prepare('DELETE FROM broker_info WHERE user_id = ?').run(broker.user_id)
-            
-            // Delete user account
-            userOperations.delete.run(broker.user_id)
+            // Delete user account (will cascade delete broker_info)
+            await userOperations.delete(broker.user_id)
             
             deletedCount++
             console.log('✅ Deleted broker:', broker.full_name)
@@ -202,7 +196,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get broker info before deletion
-    const brokerInfo = brokerOperations.findByUserId.get(userId) as any
+    const brokerInfo = await brokerOperations.findByUserId(userId)
     
     if (!brokerInfo) {
       console.log('❌ Broker info not found for user ID:', userId)
@@ -220,7 +214,7 @@ export async function DELETE(request: NextRequest) {
       
       try {
         // Delete user account (this will cascade delete broker_info due to foreign key)
-        userOperations.delete.run(userId)
+        await userOperations.delete(userId)
         console.log('✅ User account deleted:', userId)
       } catch (error) {
         console.log('❌ Error deleting user account:', error)
@@ -232,7 +226,7 @@ export async function DELETE(request: NextRequest) {
     } else {
       // Just delete broker info, keep user account
       try {
-        brokerOperations.db.prepare('DELETE FROM broker_info WHERE user_id = ?').run(userId)
+        await brokerOperations.delete(userId)
         console.log('✅ Broker info deleted, user account preserved')
       } catch (error) {
         console.log('❌ Error deleting broker info:', error)

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const user = getUserFromToken(token)
+    const user = await getUserFromToken(token)
     if (!user || user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
@@ -84,7 +84,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const user = getUserFromToken(token)
+    const user = await getUserFromToken(token)
     if (!user || user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
@@ -118,7 +118,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const user = getUserFromToken(token)
+    const user = await getUserFromToken(token)
     if (!user || user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },

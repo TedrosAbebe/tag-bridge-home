@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '../../../../lib/auth'
-import { userOperations, systemConfig } from '../../../../lib/auth-database'
+import { userOperations, systemConfig } from '../../../../lib/supabase-database'
 import { randomUUID } from 'crypto'
 import bcrypt from 'bcryptjs'
 
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if username already exists
-    const existingUser = userOperations.findByUsername.get(username)
+    const existingUser = await userOperations.findByUsername(username)
     if (existingUser) {
       return NextResponse.json(
         { success: false, error: 'Username already exists' },
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     const userId = randomUUID()
     const passwordHash = bcrypt.hashSync(password, 10)
     
-    userOperations.create.run(userId, username, passwordHash, role)
+    await userOperations.create(userId, username, passwordHash, role)
     
     console.log('✅ User created successfully:', username)
     return NextResponse.json({
@@ -125,7 +125,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get current user
-    const currentUser = userOperations.findById.get(userId) as any
+    const currentUser = await userOperations.findById(userId)
     if (!currentUser) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
@@ -137,7 +137,7 @@ export async function PUT(request: NextRequest) {
 
     // Check if new username already exists (if username is being changed)
     if (username !== currentUser.username) {
-      const existingUser = userOperations.findByUsername.get(username)
+      const existingUser = await userOperations.findByUsername(username)
       if (existingUser) {
         return NextResponse.json(
           { success: false, error: 'Username already exists' },
@@ -147,12 +147,12 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update user
-    userOperations.update.run(username, role, userId)
+    await userOperations.update(userId, username, role)
 
     // Update password if provided
     if (password && password.trim() !== '') {
       const passwordHash = bcrypt.hashSync(password, 10)
-      userOperations.updatePassword.run(passwordHash, userId)
+      await userOperations.updatePassword(userId, passwordHash)
     }
     
     console.log('✅ User updated successfully:', username)
@@ -197,17 +197,17 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Prevent deletion of the last admin account
-    const adminCount = userOperations.db.prepare('SELECT COUNT(*) as count FROM users WHERE role = "admin"').get() as { count: number }
-    const userToDelete = userOperations.findByUsername.get(username) as any
+    const hasAdminUser = await systemConfig.hasAdminUser()
+    const userToDelete = await userOperations.findByUsername(username)
     
-    if (userToDelete?.role === 'admin' && adminCount.count <= 1) {
+    if (userToDelete?.role === 'admin' && hasAdminUser) {
       return NextResponse.json(
         { success: false, error: 'Cannot delete the last admin account' },
         { status: 403 }
       )
     }
 
-    const user = userOperations.findByUsername.get(username) as any
+    const user = await userOperations.findByUsername(username)
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
@@ -215,7 +215,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    userOperations.delete.run(user.id)
+    await userOperations.delete(user.id)
     
     console.log('✅ User deleted successfully:', username)
     return NextResponse.json({

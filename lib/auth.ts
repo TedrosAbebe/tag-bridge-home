@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import { userOperations } from './auth-database'
+import { userOperations } from './supabase-database'
+import { v4 as uuidv4 } from 'uuid'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
@@ -44,11 +45,11 @@ export function verifyToken(token: string): AuthUser | null {
 }
 
 // User Login: Username + Password
-export function authenticateUser(username: string, password: string): { user: AuthUser; token: string } | null {
+export async function authenticateUser(username: string, password: string): Promise<{ user: AuthUser; token: string } | null> {
   console.log('🔐 Authenticating user:', { username })
   
   try {
-    const user = userOperations.findByUsername.get(username) as any
+    const user = await userOperations.findByUsername(username)
     
     if (!user) {
       console.log('❌ User not found for username:', username)
@@ -63,7 +64,7 @@ export function authenticateUser(username: string, password: string): { user: Au
     }
 
     // Update last login
-    userOperations.updateLastLogin.run(user.id)
+    await userOperations.updateLastLogin(user.id)
     console.log('✅ Login successful, updated last login for:', user.username)
 
     const authUser: AuthUser = {
@@ -94,14 +95,14 @@ export async function registerUser(
   try {
     // Check if user already exists
     console.log('🔍 Checking if user already exists...')
-    const existingUser = userOperations.findByUsername.get(username)
+    const existingUser = await userOperations.findByUsername(username)
     if (existingUser) {
       console.log('❌ User already exists with username:', username)
       return { error: 'User with this username already exists' }
     }
     console.log('✅ Username is available')
 
-    const userId = 'user-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9)
+    const userId = uuidv4()
     console.log('🆔 Generated user ID:', userId)
     
     const passwordHash = hashPassword(password)
@@ -111,7 +112,7 @@ export async function registerUser(
 
     // Create user account
     try {
-      userOperations.create.run(
+      await userOperations.create(
         userId,
         username,
         passwordHash,
@@ -125,7 +126,7 @@ export async function registerUser(
 
     // Verify the user was actually created
     console.log('🔍 Verifying user was created...')
-    const createdUser = userOperations.findByUsername.get(username) as any
+    const createdUser = await userOperations.findByUsername(username)
     if (!createdUser) {
       console.error('❌ User was not found after creation!')
       return { error: 'User creation verification failed' }
@@ -149,12 +150,12 @@ export async function registerUser(
   }
 }
 
-export function getUserFromToken(token: string): AuthUser | null {
+export async function getUserFromToken(token: string): Promise<AuthUser | null> {
   const decoded = verifyToken(token)
   if (!decoded) return null
 
   // Verify user still exists in database
-  const user = userOperations.findById.get(decoded.id) as any
+  const user = await userOperations.findById(decoded.id)
   if (user) {
     return {
       id: user.id,

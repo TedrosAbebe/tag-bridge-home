@@ -23,7 +23,7 @@ export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextRes
       }
 
       const token = authHeader.substring(7) // Remove 'Bearer ' prefix
-      const user = getUserFromToken(token)
+      const user = await getUserFromToken(token)
 
       if (!user) {
         return NextResponse.json(

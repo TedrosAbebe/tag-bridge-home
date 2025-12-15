@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { randomUUID } from 'crypto'
+import { v4 as uuidv4 } from 'uuid'
 import bcrypt from 'bcryptjs'
-import { userOperations, systemConfig } from '../../../../lib/auth-database'
+import { userOperations, systemConfig } from '../../../../lib/supabase-database'
 
 export async function POST(request: NextRequest) {
   console.log('🔐 Admin setup API called')
   
   try {
     // Check if admin setup is already complete
-    if (systemConfig.isAdminSetupComplete()) {
+    if (await systemConfig.isAdminSetupComplete()) {
       return NextResponse.json(
         { success: false, error: 'Admin setup has already been completed' },
         { status: 403 }
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if any admin user already exists
-    if (systemConfig.hasAdminUser()) {
+    if (await systemConfig.hasAdminUser()) {
       return NextResponse.json(
         { success: false, error: 'Admin user already exists' },
         { status: 403 }
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if username already exists
-    const existingUser = userOperations.findByUsername.get(username)
+    const existingUser = await userOperations.findByUsername(username)
     if (existingUser) {
       return NextResponse.json(
         { success: false, error: 'Username already exists' },
@@ -63,13 +63,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create admin user
-    const userId = randomUUID()
+    const userId = uuidv4()
     const passwordHash = bcrypt.hashSync(password, 12) // Higher salt rounds for admin
     
-    userOperations.create.run(userId, username, passwordHash, 'admin')
+    await userOperations.create(userId, username, passwordHash, 'admin')
     
     // Mark admin setup as complete
-    systemConfig.markAdminSetupComplete()
+    await systemConfig.markAdminSetupComplete()
     
     console.log('✅ Admin user created successfully:', username)
     console.log('🔒 Admin setup marked as complete')
@@ -92,8 +92,8 @@ export async function POST(request: NextRequest) {
 // GET - Check admin setup status
 export async function GET() {
   try {
-    const setupComplete = systemConfig.isAdminSetupComplete()
-    const hasAdmin = systemConfig.hasAdminUser()
+    const setupComplete = await systemConfig.isAdminSetupComplete()
+    const hasAdmin = await systemConfig.hasAdminUser()
     const setupEnabled = process.env.ADMIN_SETUP_ENABLED === 'true'
     
     return NextResponse.json({

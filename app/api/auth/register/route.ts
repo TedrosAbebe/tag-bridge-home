@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { registerUser } from '../../../../lib/auth'
-import { brokerOperations } from '../../../../lib/auth-database'
-import { randomUUID } from 'crypto'
+import { brokerOperations } from '../../../../lib/supabase-database'
+import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: NextRequest) {
   console.log('📝 Register API called')
@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
     // If broker registration, save broker info
     if (role === 'broker' && brokerInfo) {
       try {
-        const brokerId = randomUUID()
-        brokerOperations.create.run(
+        const brokerId = uuidv4()
+        await brokerOperations.create(
           brokerId,
           result.user.id,
           brokerInfo.fullName,

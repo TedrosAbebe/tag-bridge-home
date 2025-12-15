@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '../../../../lib/auth'
-import { userOperations } from '../../../../lib/auth-database'
+import { userOperations } from '../../../../lib/supabase-database'
 
 export async function GET(request: NextRequest) {
   console.log('👑 ADMIN USERS API CALLED')
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     console.log('✅ Admin authenticated:', decoded.username)
 
     // Get all users from database
-    const users = userOperations.getAll.all()
+    const users = await userOperations.getAll()
 
     console.log('✅ Found', users.length, 'users')
 

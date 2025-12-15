@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from './auth'
 
-export function getAuthenticatedUser(request: NextRequest) {
+export async function getAuthenticatedUser(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
     
@@ -10,15 +10,15 @@ export function getAuthenticatedUser(request: NextRequest) {
     }
 
     const token = authHeader.substring(7)
-    return getUserFromToken(token)
+    return await getUserFromToken(token)
   } catch (error) {
     console.error('Token verification error:', error)
     return null
   }
 }
 
-export function requireAuth(request: NextRequest) {
-  const user = getAuthenticatedUser(request)
+export async function requireAuth(request: NextRequest) {
+  const user = await getAuthenticatedUser(request)
   
   if (!user) {
     return NextResponse.json(
@@ -30,8 +30,8 @@ export function requireAuth(request: NextRequest) {
   return user
 }
 
-export function requireAdmin(request: NextRequest) {
-  const user = requireAuth(request)
+export async function requireAdmin(request: NextRequest) {
+  const user = await requireAuth(request)
   
   if (user instanceof NextResponse) {
     return user // Return the error response
@@ -47,8 +47,8 @@ export function requireAdmin(request: NextRequest) {
   return user
 }
 
-export function requireBroker(request: NextRequest) {
-  const user = requireAuth(request)
+export async function requireBroker(request: NextRequest) {
+  const user = await requireAuth(request)
   
   if (user instanceof NextResponse) {
     return user // Return the error response

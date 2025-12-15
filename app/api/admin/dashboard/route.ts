@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { userOperations } from '../../../../lib/auth-database'
+import { userOperations } from '../../../../lib/supabase-database'
 import { getUserFromToken } from '../../../../lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const user = getUserFromToken(token)
+    const user = await getUserFromToken(token)
     if (!user || user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all users for statistics
-    const allUsers = userOperations.getAll.all()
+    const allUsers = await userOperations.getAll()
     
     // Calculate user statistics
     const userStatsMap = allUsers.reduce((acc: any, user: any) => {
