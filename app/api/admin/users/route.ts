@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       users = await userOperations.getAll()
       console.log('✅ Found users from Supabase:', users.length)
     } catch (error) {
-      console.error('❌ Supabase error, using mock users:', error)
+      console.error('❌ Database error, using mock users:', error)
       
       // Fallback to mock data
       users = [

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       applications = await brokerOperations.getAll()
       console.log('✅ Retrieved broker applications from Supabase:', applications.length)
     } catch (error) {
-      console.error('❌ Supabase error, using mock broker applications:', error)
+      console.error('❌ Database error, using mock broker applications:', error)
       
       // Fallback to mock data
       applications = [
@@ -137,8 +137,8 @@ export async function PUT(request: NextRequest) {
         }
       }
     } catch (error) {
-      console.error('❌ Supabase error updating broker status:', error)
-      console.log('⚠️ Using mock update (Supabase not available)')
+      console.error('❌ Database error updating broker status:', error)
+      console.log('⚠️ Using mock update (database not available)')
     }
     
     console.log('✅ Broker application updated successfully')

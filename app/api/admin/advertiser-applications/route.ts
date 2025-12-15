@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       applications = data || []
       console.log('✅ Retrieved advertiser applications from Supabase:', applications.length)
     } catch (error) {
-      console.error('❌ Supabase error, using mock advertiser applications:', error)
+      console.error('❌ Database error, using mock advertiser applications:', error)
       
       // Fallback to mock data
       applications = [
@@ -123,8 +123,8 @@ export async function PUT(request: NextRequest) {
       if (error) throw error
       console.log('✅ Advertiser application updated in Supabase')
     } catch (error) {
-      console.error('❌ Supabase error updating advertiser application:', error)
-      console.log('⚠️ Using mock update (Supabase not available)')
+      console.error('❌ Database error updating advertiser application:', error)
+      console.log('⚠️ Using mock update (database not available)')
     }
 
     return NextResponse.json({
