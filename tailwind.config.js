@@ -8,56 +8,70 @@ module.exports = {
     './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   mode: 'jit',
-  // Only use safelist in production to prevent purging issues
-  ...(process.env.NODE_ENV === 'production' ? {
-    safelist: [
-      // Always include these critical classes for production
-      {
-        pattern: /^(bg|text|border)-(red|green|blue|yellow|purple|pink|gray|white|black)-(50|100|200|300|400|500|600|700|800|900)$/,
-        variants: ['hover', 'focus', 'active'],
-      },
-      {
-        pattern: /^(bg|from|to|via)-gradient-/,
-      },
-      {
-        pattern: /^animate-/,
-      },
-      {
-        pattern: /^(hover|focus|active):/,
-      },
-      // Force include all Ethiopian colors
-      'bg-ethiopian-green',
-      'bg-ethiopian-blue', 
-      'bg-ethiopian-yellow',
-      'bg-ethiopian-red',
-      'text-ethiopian-green',
-      'text-ethiopian-blue',
-      'text-ethiopian-yellow',
-      'text-ethiopian-red',
-      'border-ethiopian-green',
-      'border-ethiopian-blue',
-      // Force include common utility classes
-      'min-h-screen',
-      'max-w-7xl',
-      'mx-auto',
-      'px-4',
-      'py-2',
-      'py-4',
-      'rounded-lg',
-      'rounded-xl',
-      'shadow-lg',
-      'shadow-xl',
-      'flex',
-      'items-center',
-      'justify-center',
-      'space-x-4',
-      'space-y-4',
-      'grid',
-      'grid-cols-1',
-      'md:grid-cols-2',
-      'lg:grid-cols-3',
-    ],
-  } : {}),
+  // Always use safelist to prevent any purging issues
+  safelist: [
+    // Force include ALL color classes
+    {
+      pattern: /^(bg|text|border)-(red|green|blue|yellow|purple|pink|gray|white|black)-(50|100|200|300|400|500|600|700|800|900)$/,
+      variants: ['hover', 'focus', 'active', 'disabled'],
+    },
+    {
+      pattern: /^(bg|from|to|via)-gradient-/,
+    },
+    {
+      pattern: /^animate-/,
+    },
+    {
+      pattern: /^(hover|focus|active|disabled):/,
+    },
+    // Force include ALL Ethiopian colors
+    'bg-ethiopian-green',
+    'bg-ethiopian-blue', 
+    'bg-ethiopian-yellow',
+    'bg-ethiopian-red',
+    'text-ethiopian-green',
+    'text-ethiopian-blue',
+    'text-ethiopian-yellow',
+    'text-ethiopian-red',
+    'border-ethiopian-green',
+    'border-ethiopian-blue',
+    // Force include ALL common utility classes
+    'min-h-screen',
+    'max-w-7xl',
+    'mx-auto',
+    'px-4',
+    'py-2',
+    'py-4',
+    'rounded-lg',
+    'rounded-xl',
+    'shadow-lg',
+    'shadow-xl',
+    'flex',
+    'items-center',
+    'justify-center',
+    'space-x-4',
+    'space-y-4',
+    'grid',
+    'grid-cols-1',
+    'md:grid-cols-2',
+    'lg:grid-cols-3',
+    // Force include layout classes
+    'container',
+    'w-full',
+    'h-full',
+    'p-4',
+    'p-6',
+    'p-8',
+    'm-4',
+    'm-6',
+    'm-8',
+    'mt-4',
+    'mt-6',
+    'mt-8',
+    'mb-4',
+    'mb-6',
+    'mb-8',
+  ],
   theme: {
     extend: {
       colors: {
