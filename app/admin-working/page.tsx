@@ -290,13 +290,37 @@ export default function AdminWorkingDashboard() {
         }
       })
       
-      const data = await response.json()
+      if (!response.ok) {
+        console.error('Payment API response not ok:', response.status)
+        setPayments([]) // Set empty array as fallback
+        return
+      }
+      
+      const text = await response.text()
+      if (!text) {
+        console.error('Empty response from payments API')
+        setPayments([])
+        return
+      }
+      
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (parseError) {
+        console.error('JSON parse error for payments:', parseError, 'Response text:', text)
+        setPayments([])
+        return
+      }
       
       if (data.success) {
-        setPayments(data.payments)
+        setPayments(data.payments || [])
+      } else {
+        console.error('Payments API returned error:', data.error)
+        setPayments([])
       }
     } catch (error) {
       console.error('Error fetching payments:', error)
+      setPayments([]) // Always set fallback empty array
     }
   }
 
