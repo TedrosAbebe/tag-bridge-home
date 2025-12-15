@@ -47,3 +47,39 @@ export interface Banner {
   icon: string
   type: 'promotion' | 'announcement' | 'feature'
 }
+
+// Ethiopian cities for property listings
+export const ETHIOPIAN_CITIES = [
+  'Addis Ababa',
+  'Dire Dawa',
+  'Mekelle',
+  'Gondar',
+  'Awassa',
+  'Bahir Dar',
+  'Dessie',
+  'Jimma',
+  'Jijiga',
+  'Shashamane',
+  'Nekemte',
+  'Bishoftu',
+  'Asella',
+  'Harar',
+  'Dilla',
+  'Arba Minch',
+  'Hosaena',
+  'Adama',
+  'Debre Markos',
+  'Debre Birhan'
+]
+
+// Property types for listings
+export const PROPERTY_TYPES = [
+  { value: 'apartment', label: { en: 'Apartment', am: 'አፓርትመንት' } },
+  { value: 'house', label: { en: 'House', am: 'ቤት' } },
+  { value: 'villa', label: { en: 'Villa', am: 'ቪላ' } },
+  { value: 'condo', label: { en: 'Condominium', am: 'ኮንዶሚኒየም' } },
+  { value: 'commercial', label: { en: 'Commercial', am: 'የንግድ' } },
+  { value: 'land', label: { en: 'Land', am: 'መሬት' } },
+  { value: 'office', label: { en: 'Office', am: 'ቢሮ' } },
+  { value: 'warehouse', label: { en: 'Warehouse', am: 'መጋዘን' } }
+]

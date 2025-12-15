@@ -27,11 +27,11 @@ export default function RootLayout({
           `
         }} />
       </head>
-      <body className="antialiased">
+      <body className="min-h-screen bg-gray-50 antialiased">
         <LanguageProvider>
           <AuthProvider>
             <Navigation />
-            <main className="pb-16 md:pb-0">
+            <main className="min-h-screen pb-16 md:pb-0">
               {children}
             </main>
           </AuthProvider>

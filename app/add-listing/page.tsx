@@ -32,8 +32,8 @@ export default function AddListingPage() {
     bathrooms: '',
     size: '',
     features: [] as string[],
-    whatsappNumber: user?.whatsappNumber || '',
-    phoneNumber: user?.phone || '',
+    whatsappNumber: '+251991856292',
+    phoneNumber: '+251991856292',
     images: [] as string[]
   })
   
@@ -168,8 +168,8 @@ export default function AddListingPage() {
                   required
                 >
                   {PROPERTY_TYPES.map(type => (
-                    <option key={type} value={type}>
-                      {t(type)}
+                    <option key={type.value} value={type.value}>
+                      {type.label.en}
                     </option>
                   ))}
                 </select>
