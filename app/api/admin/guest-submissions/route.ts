@@ -162,22 +162,21 @@ export async function PUT(request: NextRequest) {
       )
     }
     
+    // Mock approval/rejection process
+    const updatedSubmission = {
+      id: submissionId,
+      property_id: propertyId,
+      status: action === 'approve' ? 'approved' : 'rejected',
+      reviewed_by: authCheck.decoded.username,
+      reviewed_at: new Date().toISOString(),
+      admin_notes: adminNotes || rejectionReason || null
+    }
+    
     try {
       // In a real app, this would update the database:
       // await guestSubmissionOperations.updateStatus(submissionId, action, adminNotes)
       // If approved, also create property in properties table
       console.log('⚠️ Using mock guest submission update (database not implemented)')
-      
-      // Mock approval/rejection process
-      const updatedSubmission = {
-        id: submissionId,
-        property_id: propertyId,
-        status: action === 'approve' ? 'approved' : 'rejected',
-        reviewed_by: authCheck.decoded.username,
-        reviewed_at: new Date().toISOString(),
-        admin_notes: adminNotes || rejectionReason || null
-      }
-      
       console.log('✅ Guest submission updated successfully')
     } catch (error) {
       console.error('❌ Database error updating guest submission:', error)
