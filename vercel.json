@@ -3,12 +3,15 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
   "regions": ["iad1"],
   "functions": {
     "app/api/**/*.ts": {
       "runtime": "nodejs20.x"
     }
+  },
+  "env": {
+    "NODE_ENV": "production"
   },
   "headers": [
     {
@@ -17,6 +20,19 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/_next/static/css/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Content-Type",
+          "value": "text/css"
         }
       ]
     }

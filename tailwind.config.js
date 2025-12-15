@@ -9,9 +9,10 @@ module.exports = {
   ],
   mode: 'jit',
   safelist: [
-    // Always include these critical classes
+    // Always include these critical classes for production
     {
       pattern: /^(bg|text|border)-(red|green|blue|yellow|purple|pink|gray|white|black)-(50|100|200|300|400|500|600|700|800|900)$/,
+      variants: ['hover', 'focus', 'active'],
     },
     {
       pattern: /^(bg|from|to|via)-gradient-/,
@@ -22,15 +23,37 @@ module.exports = {
     {
       pattern: /^(hover|focus|active):/,
     },
-    // Ethiopian colors
+    // Force include all Ethiopian colors
     'bg-ethiopian-green',
     'bg-ethiopian-blue', 
     'bg-ethiopian-yellow',
     'bg-ethiopian-red',
     'text-ethiopian-green',
     'text-ethiopian-blue',
+    'text-ethiopian-yellow',
+    'text-ethiopian-red',
     'border-ethiopian-green',
     'border-ethiopian-blue',
+    // Force include common utility classes
+    'min-h-screen',
+    'max-w-7xl',
+    'mx-auto',
+    'px-4',
+    'py-2',
+    'py-4',
+    'rounded-lg',
+    'rounded-xl',
+    'shadow-lg',
+    'shadow-xl',
+    'flex',
+    'items-center',
+    'justify-center',
+    'space-x-4',
+    'space-y-4',
+    'grid',
+    'grid-cols-1',
+    'md:grid-cols-2',
+    'lg:grid-cols-3',
   ],
   theme: {
     extend: {
