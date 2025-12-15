@@ -22,6 +22,7 @@ export interface Property {
   bedrooms?: number
   bathrooms?: number
   size: number
+  features: string[]
   images: string[]
   status: string
   whatsappNumber: string

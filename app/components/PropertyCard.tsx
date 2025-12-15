@@ -194,7 +194,7 @@ export default function PropertyCard({
         </div>
 
         <div className="text-sm text-gray-600 mb-3">
-          {property.size} m² • {property.features.slice(0, 2).join(', ')}
+          {property.size} m² • {property.features?.slice(0, 2).join(', ') || 'No features listed'}
         </div>
 
         {/* Action Buttons */}
