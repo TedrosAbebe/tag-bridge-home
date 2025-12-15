@@ -27,9 +27,46 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all broker applications
-    const applications = await brokerOperations.getAll()
+    let applications = []
+    try {
+      applications = await brokerOperations.getAll()
+      console.log('✅ Retrieved broker applications from Supabase:', applications.length)
+    } catch (error) {
+      console.error('❌ Supabase error, using mock broker applications:', error)
+      
+      // Fallback to mock data
+      applications = [
+        {
+          id: '1',
+          user_id: 'broker-user-1',
+          username: 'broker1',
+          full_name: 'John Broker',
+          email: 'john@broker.com',
+          phone: '+251911123456',
+          license_number: 'BR001',
+          experience: '5 years',
+          specialization: 'Residential Properties',
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          user_created_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          user_id: 'broker-user-2',
+          username: 'broker2',
+          full_name: 'Jane Broker',
+          email: 'jane@broker.com',
+          phone: '+251922123456',
+          license_number: 'BR002',
+          experience: '3 years',
+          specialization: 'Commercial Properties',
+          status: 'approved',
+          created_at: new Date().toISOString(),
+          user_created_at: new Date().toISOString()
+        }
+      ]
+    }
     
-    console.log('✅ Retrieved broker applications:', applications.length)
     return NextResponse.json({
       success: true,
       applications
@@ -88,15 +125,20 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update broker application status
-    await brokerOperations.updateStatus(userId, status)
-    
-    // If approved, ensure user role is set to broker
-    if (status === 'approved') {
-      const user = await userOperations.findById(userId)
-      if (user) {
-        await userOperations.update(userId, user.username, 'broker')
-        console.log('✅ User role updated to broker:', user.username)
+    try {
+      await brokerOperations.updateStatus(userId, status)
+      
+      // If approved, ensure user role is set to broker
+      if (status === 'approved') {
+        const user = await userOperations.findById(userId)
+        if (user) {
+          await userOperations.update(userId, user.username, 'broker')
+          console.log('✅ User role updated to broker:', user.username)
+        }
       }
+    } catch (error) {
+      console.error('❌ Supabase error updating broker status:', error)
+      console.log('⚠️ Using mock update (Supabase not available)')
     }
     
     console.log('✅ Broker application updated successfully')

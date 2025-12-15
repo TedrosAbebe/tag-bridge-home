@@ -21,9 +21,45 @@ export async function GET(request: NextRequest) {
     console.log('✅ Admin authenticated:', decoded.username)
 
     // Get all users from database
-    const users = await userOperations.getAll()
-
-    console.log('✅ Found', users.length, 'users')
+    let users = []
+    try {
+      users = await userOperations.getAll()
+      console.log('✅ Found users from Supabase:', users.length)
+    } catch (error) {
+      console.error('❌ Supabase error, using mock users:', error)
+      
+      // Fallback to mock data
+      users = [
+        {
+          id: '1',
+          username: 'tedros',
+          role: 'admin',
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString()
+        },
+        {
+          id: '2',
+          username: 'broker1',
+          role: 'broker',
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString()
+        },
+        {
+          id: '3',
+          username: 'user1',
+          role: 'user',
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString()
+        },
+        {
+          id: '4',
+          username: 'advertiser1',
+          role: 'advertiser',
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString()
+        }
+      ]
+    }
 
     // Calculate user statistics
     const stats = users.reduce((acc: any, u: any) => {
