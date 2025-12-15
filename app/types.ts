@@ -27,6 +27,9 @@ export interface Property {
   status: string
   whatsappNumber: string
   phoneNumber: string
+  ownerId?: string
+  createdAt?: Date
+  updatedAt?: Date
   advertiser?: {
     name: string
     business: string
